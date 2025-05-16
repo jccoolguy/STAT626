@@ -1,0 +1,23 @@
+---
+title: "Chapter 1 Assignments"
+author: "Jack Cunningham"
+format: html
+editor: visual
+---
+
+Loading Packages
+
+```{r}
+library(astsa)
+```
+
+1.1)
+
+```{r}
+set.seed(2)
+w = rnorm(100 + 50)
+x = filter(w, filter = c(0,-.9), method = "recursive")[-(1:50)]
+nu = filter(w, sides = 2, filter(1/4,4))[-(1:50)]
+tsplot(x, main = "autoregression", col = 4)
+lines(nu, lty = 2)
+```
