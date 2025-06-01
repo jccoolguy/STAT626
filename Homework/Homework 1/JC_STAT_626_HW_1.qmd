@@ -1,0 +1,100 @@
+---
+title: "STAT 626 Homework 1"
+author: "Jack Cunningham"
+format: pdf
+editor: visual
+---
+
+```{r}
+library(astsa)
+```
+
+1.1)
+
+Generating 100 observations from $x_t = .9x_{t-2}+w_t; \quad \sigma_w=1$:
+
+```{r}
+set.seed(10)
+w = rnorm(100 + 50)
+#Extra 50 for Startup
+x_long = filter(w, filter = c(0,.9), method = "recursive")
+```
+
+Applying moving average filter $v_t=(x_t+x_{t-1}+x_{t-2}+x_{t-3})/4$:
+
+```{r}
+#Extra 50 for Startup
+v = filter(x_long, sides = 1, filter = rep(1/4,4))[-(1:50)]
+x = x_long[-(1:50)]
+```
+
+Plotting:
+
+```{r}
+tsplot(x, col = "lightblue", main = "X and V Autoregression")
+lines(v, lty = "dashed")
+```
+
+b\)
+
+Generating $x_t =2 \cos(2\pi t/4)+w_t$:
+
+```{r}
+#Extra 50 for startup
+t = 1:150
+cs = 2*cos(2*pi*t/4)
+x_long = cs + w
+```
+
+Applying moving average filter $v_t=(x_t+x_{t-1}+x_{t-2}+x_{t-3})/4$:
+
+```{r}
+#Extra 50 for Startup
+v = filter(x_long, sides = 1, filter = rep(1/4,4))[-(1:50)]
+x = x_long[-(1:50)]
+```
+
+Plotting:
+
+```{r}
+tsplot(x, col = "lightblue", main = "X and V Signal + Noise")
+lines(v, lty = "dashed")
+```
+
+c\)
+
+Loading log of J&J data:
+
+```{r}
+x = log(jj)
+```
+
+Applying moving average filter $v_t=(x_t+x_{t-1}+x_{t-2}+x_{t-3})/4$:
+
+```{r}
+#Extra 50 for Startup
+v = filter(x, sides = 1, filter = rep(1/4,4))
+```
+
+Plotting:
+
+```{r}
+tsplot(x, col = "lightblue", main = "X and V log(J&J)")
+lines(v, lty = "dashed")
+```
+
+d\)
+
+According to Investopedia: "Seasonal adjustments are a statistical method to smooth out aberrations in time series of certain types of economic activity that occur on a regular or cyclical basis. These adjustments provide a clearer view of net trends and nonseasonal changes in data."
+
+In the case of J&J, we have previously analyzed the fact that there is a pattern of three quarters of similar performance and a quarter of poorer performance. By using a seasonal adjustment we can focus on the overall trend of the company, and not the seasonal effect causing that deviation.
+
+e\)
+
+I learned that using a moving average filter can help us visually identify trends in data. This is because variance is reduced by averaging.
+
+With this smaller variance, high frequency behavior is removed. A good example of this is in the Signal + Noise data, we can now see some evidence of the Cosine curve which is generating the data set while before the quick oscillations up and down made it harder to identify.
+
+In the J&J case, we can use the averaging of 4 observations to intentionally remove the expected seasonality and only analyze the overall yearly trend in earnings.
+
+In the auto regression case we can more easily see the periodical ups and downs that exist due to each observation being based on previous observations.
