@@ -98,3 +98,183 @@ With this smaller variance, high frequency behavior is removed. A good example o
 In the J&J case, we can use the averaging of 4 observations to intentionally remove the expected seasonality and only analyze the overall yearly trend in earnings.
 
 In the auto regression case we can more easily see the periodical ups and downs that exist due to each observation being based on previous observations.
+
+# II.
+
+1\)
+
+Showing $\sum_{i=1}^n(x_i-\bar{x})=0$:
+
+$$
+\text{using }\bar{x}=\frac{1}{n}\sum_{i=1}^nx_i
+$$
+
+$$
+\sum_{i=1}^n(x_i-\bar{x})=\sum_{i=1}^nx_i-\sum_{i=1}^n\bar{x}=n\bar{x}-n \bar{x}=0
+$$
+
+Showing $\sum_{i=1}^n(x_i -\bar{x})(y_i-\bar{y})=\sum_{i=1}^n(x_i-\bar{x})y_i$:
+
+$$
+\sum_{i=1}^n(x_i-\bar{x})(y_i-\bar{y})=\sum_{i=1}^n(x_i-\bar{x})y_i- \bar{y}\sum_{i=1}^n(x_i-\bar{x})
+$$
+
+The right term is equal to 0, as we have previously shown that $\sum_{i=1}^n (x_i-\bar{x})=0$.
+
+2\)
+
+Showing $S_{x}^{-2} \sum_{i=1}^n(x_i-\bar{x})(y_i-\bar{y})=\sum_{i=1}^n c_iy_i \quad \text{ where }c_i=\frac{x_i-\bar{x}}{S_x^2},S_x^2=\sum_{i=1}^n(x_i-\bar{x})^2$:
+
+$$
+\text{Our previous result of } \sum_{i=1}^n(x_i-\bar{x})(y_i-\bar{y})=\sum_{i=1}^n(x_i-\bar{x})y_i \text{ thus leaving us with:} 
+$$
+
+$$
+S_x^{-2} \sum_{i=1}^n(x_i-\bar{x})y_i=\sum_{i=1}^nc_iy_i
+$$
+
+3\)
+
+a\)
+
+We have the residual sum of squares equation:
+
+$$
+Q(\beta_0,\beta_1)=\sum(y_i-\beta_0-\beta_1x_i)^2
+$$
+
+We are looking for the $(\beta_0,\beta_1)$ that minimize this equation, so we take the derivative with respect to each:
+
+$$
+\frac{\partial Q(\beta_0,\beta_1)}{\partial\beta_0}=-2\sum(y_i-\beta_0-\beta_1x_i)
+$$
+
+$$
+\frac{\partial Q(\beta_0,\beta_1)}{\partial \beta_1}=-2 \sum x_i(y_i-\beta_0-\beta_1 x_i)
+$$
+
+We set each equal to zero and solve the system of equations. Starting with the partial derivative with respect to $\beta_0$:
+
+$$
+-2 \sum(y_i-\beta_0-\beta_1 x_i)=0\\
+$$
+
+$$
+-\sum y_i +\sum \beta_0-\beta_1 \sum x_i=0
+$$
+
+$$
+\beta_0=\frac{\sum y_i+\beta_1 \sum x_i}{n}=\bar{y}-\beta_1 \bar{x}
+$$
+
+Taking $\beta_0$ and substituting into the partial derivative with respect to $\beta_1$:
+
+$$
+-2 \sum x_i(y_i - \bar{y} +\beta_1 \bar{x} -\beta_1 x_i)=0
+$$
+
+$$
+\sum x_i(y_i-\bar{y})  +\beta_1 \sum x_i(\bar{x}-x_i)=0
+$$
+
+$$
+\beta_1= \sum\frac{x_i(y_i-\bar{y})}{x_i(x_i-\bar{x})}
+$$
+
+To get this into the usual form we need to do some algebra. Starting with the denominator:
+
+$$
+\sum x_i(x_i - \bar{x})=\sum x_i^2 -\sum x_i \bar{x}=\sum x_i^2-n \bar{x}^2=\sum (x_i^2-\bar{x}^2)
+$$
+
+This term is equivalent to $\sum(x_i-\bar{x})^2=\text{SXX}$ , shown below:
+
+$$
+\sum(x_i-\bar{x})^2=\sum (x_i^2 - 2 x_i \bar{x} +\bar{x}^2)=\sum(x_i^2 -2 \bar{x}^2+\bar{x}^2)=\sum(x_i^2-\bar{x}^2)
+$$
+
+The numerator $\sum x_i(y_i-\bar{y})=\sum(x_i-\bar{x})(y_i-\bar{y})$ using results from part 1.
+
+So our LSE estimates are:
+
+$$
+\hat{\beta_0}=\bar{y}-\beta_1 \bar{x}
+$$
+
+$$
+\hat{\beta_1}= \sum\frac{(x_i-\bar{x})(y_i-\bar{y})}{(x_i-\bar{x})^2}=\frac{\text{SXY}}{\text{SXX}}
+$$
+
+b\)
+
+$$
+\text{We can rewrite } \hat{\beta}_1 \text{ as } S_x^{-2}\sum_{i=1}^n(x_i-\bar{x})(y_i-\bar{y}) \text{ which is identical to part 2}
+$$
+
+With assuming $\epsilon_i \sim N(0, \sigma^2)$ we can determine the distribution $\hat{\beta_1}$.First I substitute in the assumption of $y_i=\beta_0+\beta_1 x_i +\epsilon_i$
+
+$$
+\hat{\beta_1}=\sum_{i=1}^nc_i(\beta_0+\beta_1 x_i +\epsilon_i)
+$$
+
+We assume that $x_i$ are chosen, and thus fixed variables without a distribution. So, since these are constants we can we end up with a shifted normal distribution. To find $\mu$ we take the expected value of $\hat{\beta_1}$:
+
+$$
+E[\hat{\beta_1}]=\sum_{i=1}^nc_i(\beta_0+\beta_1 x_i)
+$$Breaking apart $c_i$ helps further simplify:
+
+$$
+\sum\frac{(x_i-\bar{x})(\beta_0+\beta_1x_i)}{(x_i-\bar{x})^2}=\sum\frac{(x_i-\bar{x})\beta_0}{(x_i-\bar{x})^2}+\sum \frac{\beta_1(x_i-\bar{x})x_i}{(x_i-\bar{x})^2}
+$$ Now we use our results from part 1. Starting with the left term, we have shown that $\sum(x_i -\bar{x})=0$, so it is equal to zero. The right term utilizes our second part 1 result. So we can say:
+
+$$
+=\sum\frac{\beta_1(x_i-\bar{x})^2}{(x_i-\bar{x})^2}=\beta_1
+$$
+
+Now finding the variance of the normal distribution of $\hat{\beta_1}$ is rather simple:
+
+$$
+Var(\hat{\beta_1})=Var(\sum_{i=1}^nc_i(\beta_0+\beta_1x_i+\epsilon_i))=Var(\sum_{i=1}^nc_i \epsilon_i)=\sum_{i=1}^n c_i^2 \sigma^2=\frac{\sum(x_i-\bar{x})^2}{(\sum(x_i-\bar{x})^2)^2}\sigma^2=\frac{\sigma^2}{\sum_{i=1}^n (x_i-\bar{x})^2}=\frac{\sigma^2}{\text{SSX}}
+$$
+
+So, the distribution of $\hat{\beta_1}$ is $N(\beta_1,\sigma^2/\text{SSX})$.
+
+c\)
+
+$$
+e_i=y_i-\hat{y_i}=y_i-\hat{\beta_0}-\hat{\beta_1}x_i
+$$
+
+From previous work we have $\hat{\beta_0}=\bar{y}-\hat{\beta_1}\bar{x}$ so:
+
+$$
+e_i=y_i-\bar{y} +\hat{\beta_1} \bar{x}  - \hat{\beta_1}x_i
+$$
+
+So:
+
+$$
+\sum_{i=1}^ne_i=\sum_{i=1}^n(y_i-\bar{y}) - \hat{\beta_1}\sum_{i=1}^n(x_i-\bar{x})
+$$
+
+The result $\sum_{i=1}^n e_i=0$ then follows directly from our first result in part 1.
+
+Building off this we can show the next result:
+
+$$
+\sum_{i=1}^n e_i x_i= \sum_{i=1}^nx_i(y_i-\bar{y}) -\hat{\beta_1} \sum_{i=1}^n x_i(x_i-\bar{x})
+$$
+
+We use the second result form part 1 twice:
+
+$$
+= \sum_{i=1}^n(x_i-\bar{x})(y_i-\bar{y})-\hat{\beta_1} \sum_{i=1}^n(x_i-\bar{x})^2=\text{SXY}-\hat{\beta_1} \text{SXX} 
+$$
+
+We then substitute in the estimate for $\hat{\beta_1}$:
+
+$$
+=\text{SXY} - \frac{\text{SXY}}{\text{SXX}}\text{SXX}=0
+$$
+
+The geometrical interpretation is that the vector of residuals $e$ is orthogonal to column space of the design matrix $x$.
