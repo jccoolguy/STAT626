@@ -9,6 +9,8 @@ editor: visual
 library(astsa)
 ```
 
+# I.
+
 1.1)
 
 Generating 100 observations from $x_t = .9x_{t-2}+w_t; \quad \sigma_w=1$:
@@ -99,7 +101,64 @@ In the J&J case, we can use the averaging of 4 observations to intentionally rem
 
 In the auto regression case we can more easily see the periodical ups and downs that exist due to each observation being based on previous observations.
 
-# II.
+1.3)
+
+a\)
+
+Random walk plots:
+
+```{r}
+par(mfrow = c(3,3))
+set.seed(20)
+for(i in 1:9){
+  w = rnorm(500)
+  x = cumsum(w)
+  tsplot(x)
+}
+```
+
+b\)
+
+Moving Average:
+
+```{r}
+par(mfrow = c(3,3))
+set.seed(20)
+for(i in 1:9){
+  w = rnorm(500)
+  v = filter(w, sides = 2, filter = rep(1/3,3))
+  tsplot(v, ylim = c(-5,5))
+}
+```
+
+c\)
+
+For random walks we see that each value is dependent on the previous value, and the path each random walk takes can differ quite a bit. It is also tempting to read a pattern into each plot, but we know that each new value is simply the previous value + a random factor.
+
+For moving averages, all plots look similar. The plots are generally centered around 0, with oscillations of smaller magnitude due our averaging.
+
+1.4)
+
+a\)
+
+```{r}
+tsplot(gdp)
+```
+
+This looks like a random walk with a positive drift component to me.
+
+b\)
+
+```{r}
+tsplot(diff(log(gdp)), type = "o", col = "blue", ylab = "GDP Growth")
+points(diff(gdp)/lag(gdp, -1), pch = 3, col = "green")
+```
+
+The differences between the two methods are very small, they only would get large if the rate of change was very large over a time period. We don't see that here.
+
+c\)
+
+Between random walks and moving averages, the moving average model is clearly more appropriate. The growth rate is centered around about 0.01, has oscillations which are not large in nature and nearby points are close in magnitude.
 
 1\)
 
