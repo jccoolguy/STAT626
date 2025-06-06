@@ -5,7 +5,7 @@ format: pdf
 editor: visual
 ---
 
-```{r}
+```{r, echo=FALSE}
 library(astsa)
 ```
 
@@ -15,7 +15,7 @@ library(astsa)
 
 Generating 100 observations from $x_t = .9x_{t-2}+w_t; \quad \sigma_w=1$:
 
-```{r}
+```{r,echo=FALSE}
 set.seed(10)
 w = rnorm(100 + 50)
 #Extra 50 for Startup
@@ -24,7 +24,7 @@ x_long = filter(w, filter = c(0,.9), method = "recursive")
 
 Applying moving average filter $v_t=(x_t+x_{t-1}+x_{t-2}+x_{t-3})/4$:
 
-```{r}
+```{r, echo=FALSE}
 #Extra 50 for Startup
 v = filter(x_long, sides = 1, filter = rep(1/4,4))[-(1:50)]
 x = x_long[-(1:50)]
@@ -32,7 +32,7 @@ x = x_long[-(1:50)]
 
 Plotting:
 
-```{r}
+```{r, echo=FALSE}
 tsplot(x, col = "lightblue", main = "X and V Autoregression")
 lines(v, lty = "dashed")
 ```
@@ -41,7 +41,7 @@ b\)
 
 Generating $x_t =2 \cos(2\pi t/4)+w_t$:
 
-```{r}
+```{r, echo=FALSE}
 #Extra 50 for startup
 t = 1:150
 cs = 2*cos(2*pi*t/4)
@@ -50,7 +50,7 @@ x_long = cs + w
 
 Applying moving average filter $v_t=(x_t+x_{t-1}+x_{t-2}+x_{t-3})/4$:
 
-```{r}
+```{r, echo=FALSE}
 #Extra 50 for Startup
 v = filter(x_long, sides = 1, filter = rep(1/4,4))[-(1:50)]
 x = x_long[-(1:50)]
@@ -58,7 +58,7 @@ x = x_long[-(1:50)]
 
 Plotting:
 
-```{r}
+```{r, echo=FALSE}
 tsplot(x, col = "lightblue", main = "X and V Signal + Noise")
 lines(v, lty = "dashed")
 ```
@@ -67,20 +67,20 @@ c\)
 
 Loading log of J&J data:
 
-```{r}
+```{r, echo=FALSE}
 x = log(jj)
 ```
 
 Applying moving average filter $v_t=(x_t+x_{t-1}+x_{t-2}+x_{t-3})/4$:
 
-```{r}
+```{r, echo=FALSE}
 #Extra 50 for Startup
 v = filter(x, sides = 1, filter = rep(1/4,4))
 ```
 
 Plotting:
 
-```{r}
+```{r, echo=FALSE}
 tsplot(x, col = "lightblue", main = "X and V log(J&J)")
 lines(v, lty = "dashed")
 ```
@@ -107,7 +107,7 @@ a\)
 
 Random walk plots:
 
-```{r}
+```{r, echo=FALSE}
 par(mfrow = c(3,3))
 set.seed(20)
 for(i in 1:9){
@@ -121,7 +121,7 @@ b\)
 
 Moving Average:
 
-```{r}
+```{r, echo=FALSE}
 par(mfrow = c(3,3))
 set.seed(20)
 for(i in 1:9){
@@ -141,7 +141,7 @@ For moving averages, all plots look similar. The plots are generally centered ar
 
 a\)
 
-```{r}
+```{r, echo=FALSE}
 tsplot(gdp)
 ```
 
@@ -149,7 +149,7 @@ This looks like a random walk with a positive drift component to me.
 
 b\)
 
-```{r}
+```{r, echo=FALSE}
 tsplot(diff(log(gdp)), type = "o", col = "blue", ylab = "GDP Growth")
 points(diff(gdp)/lag(gdp, -1), pch = 3, col = "green")
 ```
