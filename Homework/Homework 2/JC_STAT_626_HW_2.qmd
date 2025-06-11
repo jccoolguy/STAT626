@@ -1,0 +1,104 @@
+---
+title: "STAT 626 Homework 2"
+author: "Jack Cunningham"
+format: pdf
+editor: visual
+---
+
+```{r, echo=FALSE}
+library(astsa)
+```
+
+# 1.
+
+2.2)
+
+We have $x_t=\beta_0+\beta_1t+w_t$ where $w_t$ is white noise, so mean of 0 and variance of $\sigma^2_w$.
+
+a\)
+
+In order for $x_t$ to be stationary we must have $E[x_t]$ constant that does not depend on $t$. And $Cov(x_t,x_s)$ only depends on the lag $|t-s|$ and not the actual values of t and s.
+
+We start with the first condition.
+
+$$
+E[x_t]=\beta_0+\beta_1t
+$$
+
+This clearly depends on t, so $x_t$ is not stationary.
+
+b\)
+
+We have $y_t=x_t-x_{t-1}$ when we rewrite this we have:
+
+$$
+y_t=x_t-x_{t-1}=\beta_0+\beta_1 t+w_t-(\beta_0+\beta_1(t-1)+w_{t-1})=\beta_1+w_t-w_{t-1}
+$$
+
+We start with the first condition of stationary:
+
+$$
+E[y_t]=\beta_1
+$$
+
+Since this is constant and does not depend on t, this condition is met.
+
+Next we need to show that $Cov(y_t,y_s)$ only depends on the lag $|t-s|$:
+
+$$
+Cov(y_t,y_s)=Cov(\beta_1+w_t-w_{t-1},\beta_1+w_s-w_{s-1})
+$$
+
+When $s = t$ we have:
+
+$$
+Cov(y_t,y_t)=Var(y_t)=Var(\beta_1+w_t-w_{t-1})=2\sigma_w^2
+$$
+
+When $s = |t -1|$ we have:
+
+$$
+Cov(y_t,y_{t-1})=Cov(\beta_1+w_t-w_{t-1},\beta_1+w_{t-1}-w_{t-2})=Cov(-w_{t-1},w_{t-1})=-Var(w_{t-1})=-\sigma_w^2
+$$
+
+When $s = |t-2|$ we have:
+
+$$
+Cov(y_t,y_{t-2})=Cov(\beta_1+w_t-w_{t-1},\beta_1+w_{t-2}-w_{t-3})=0
+$$So we have:
+
+$$
+\gamma(h) = \begin{cases} 2 \sigma^2_w & h=0 \\ -\sigma_w^2 & h=1 \\ 0 & h \geq2\end{cases}
+$$Since we have shown that the auto covariance function depends on $s$ and $t$ only through the lag $h$ we can say $y_t$ is stationary.
+
+# 2.
+
+We have $X_1$ with $Var(X_1)=1$ and $X_2$ with $Var(X_2)=4$, and $Cov(X_1,X_2)=-2$.
+
+a\)
+
+$Var(X_1-5X_2)=Var(X_1)+25Var(X_2)-2(5Cov(X_1,X_2))=1+(25)(4)-(2)(5)(-2)=121$
+
+$Var(X_1+5X_2)=Var(X_1)+25Var(X_2) + 2(5)(Cov(X_1,X_2))=1+(25)(4)+(2)(5)(-2)=81$
+
+$Var(X_1+X_2)=Var(X_1)+Var(X_2)+2Cov(X_1,X_2)=1+4+(2)(-2)=1$
+
+b\)
+
+$Var(X_1-cX_2)=Var(X_1)+c^2Var(X_2)-2c Cov(X_1,X_2)$
+
+Take partial derivative relative to c:
+
+$$
+\frac{\delta}{\delta c}=2cVar(X_2)-2Cov(X_1,X_2)
+$$
+
+Set equal to zero:
+
+$$
+2cVar(X_2)=2Cov(X_1,X_2)
+$$
+
+$$
+c=Cov(X_1,X_2)/Var(X_2)=\frac{-2}{4}=-1/2
+$$
