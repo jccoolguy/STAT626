@@ -282,7 +282,11 @@ $$
 \gamma(t,t)=Var(x_t)=Var(w_tw_{t-1})=E[(w_tw_{t-1}-\mu_{x_t})^2]=E[(w_tw_{t-1})^2]=Cov(w_t,w_{t-1})=0
 $$
 
-Then $\gamma(t+1,t)$
+Then $\gamma(t+1,t)$:
+
+$$
+\gamma(t+1,t)=Cov(x_{t+1},x_t)=Cov(w_{t+1}w_t,w_tw_{t-1})=E[(w_{t+1}w_t)(w_t w_{t-1})]
+$$
 
 # 2.
 
