@@ -71,6 +71,219 @@ $$
 \gamma(h) = \begin{cases} 2 \sigma^2_w & h=0 \\ -\sigma_w^2 & h=1 \\ 0 & h \geq2\end{cases}
 $$Since we have shown that the auto covariance function depends on $s$ and $t$ only through the lag $h$ we can say $y_t$ is stationary.
 
+c\)
+
+We the two sided moving average $v_t=\frac{1}{3}(x_{t-1}+x_t+x_{t+1})$. To start, we expand out each $x$:
+
+$$
+v_t=\frac{1}{3}(\beta_0+\beta_1(t-1)+w_{t-1}+\beta_0+\beta_1(t)+w_{t}+\beta_0+\beta_1(t+1)+w_{t+1})=\frac{1}{3}(3\beta_0+3\beta_1+w_{t-1}+w_t+w_{t+1})
+$$
+
+Then to get the mean we take the expected value:
+
+$$
+E[v_t]=E[\beta_0+\beta_1+w_{t-1}+w_t+w_{t+1}]=\beta_0+\beta_1
+$$
+
+2.3)
+
+We have the two sided moving average smoother $x_t=\frac{1}{4}(w_{t-1}+2w_t+w_{t+1})$ with $w_t$ white noise:
+
+To find the the autocovariance function we start with the case of $h=0$:
+
+$$
+\gamma(h)=Cov(x_t,x_t)=Var(\frac{1}{4}(w_{t-1}+2w_t+w_{t+1}))=\frac{1}{16}(\sigma_w^2+4 \sigma_w^2+\sigma_w^2)=\frac{6}{16}\sigma_w^2=\frac{3}{8}\sigma_w^2
+$$
+
+Then the case of $h=1$:
+
+$$
+\gamma(1)=Cov(x_{t+1},x_t)=Cov(\frac{1}{4}(w_t+2w_{t+1}+w_{t+2}),\frac{1}{4}(w_{t-1}+2w_t+w_{t+1}))=\frac{1}{16}(Cov(w_t,2w_t)+Cov(2w_{t+1},w_{t+1}))
+$$
+
+$$
+=\frac{1}{16}(2\sigma_w^2+2 \sigma^2_w)=\frac{1}{4}\sigma^2_w
+$$
+
+Then the case of $h=2$:
+
+$$
+\gamma(2)=Cov(x_{t+2},x_t)=Cov(\frac{1}{4}(w_{t+1}+2w_{t+2}+w_{t+3}),\frac{1}{4}(w_{t-1}+2w_t+w_{t+1}))=\frac{1}{16}Cov(w_{t+1},w_{t+1})=\frac{1}{16}\sigma_w^2
+$$
+
+So we have the autocovariance function:
+
+$$
+\gamma(h) =\begin{cases} \frac{3}{8}\sigma_w^2 & h=0 \\
+\frac{1}{4}\sigma_w^2 & h=1 \\ \frac{1}{16}\sigma_w^2 & h=2 \\ 0 & h \geq3\end{cases}
+$$
+
+Then we get the autocorrelation function by dividing each term by $\gamma(0)$ so:
+
+$$
+\rho(h)=\begin{cases} 1 & h=0 \\
+\frac{2}{3}&h=1 \\
+\frac{1}{6} & h =2 \\
+0 & h \geq3
+\end{cases} 
+$$
+
+Here is a sketch of the ACF:
+
+```{r,echo=FALSE}
+h = seq(-5,5)
+rho = c(0,0,0,1/6,2/3,1,2/3,1/6,0,0,0)
+plot(h,rho, main = "ACF")
+```
+
+2.4)
+
+We have $x_t=\phi x_{t-1}+w_t$ where $w_t \sim wn(0,1)$ and $x_t$ is stationary and $x_{t-1}$ is uncorrelated with noise $w_t$.
+
+a\)
+
+To show this we use the fact that $x_t$ is stationary, and thus expected value is constant and does not depend on t. So:
+
+$$
+E[x_t]=E[\phi x_{t-1}+w_t]=\phi E[x_{t-1}]
+$$
+
+Since $x_t$ is stationary $E[x_t]=E[x_{t-1}]$, thus the only $E[x_t]$ that always has $E[x_t]=\phi E[x_{t-1}]$ is $E[x_t]=\mu_{xt}=0$.
+
+b\)
+
+$\gamma(0)=Var(x_t)=Var(\phi x_{t-1}+w_t)=\phi^2Var(x_{t-1})+1$
+
+We use the fact that $x_t$ is stationary, and thus autocovariance only depends on the lag component and not t so say that in general $Var(x_i)=\gamma(0)$. Therefore $Var(x_{t-1})=\gamma(0)$:
+
+$$
+\gamma(0)=\phi^2\gamma(0)+1
+$$
+
+$$
+\gamma(0)-\phi^2 \gamma(0)=1
+$$
+
+$$
+\gamma(0)=\frac{1}{1-\phi^2}
+$$
+
+c\)
+
+Since variance cannot be negative only $\phi <1$ makes sense.
+
+d\)
+
+First we want to find $\gamma(1)$:
+
+$$
+\gamma(1)=Cov(x_{t+1},x_t)=Cov(\phi x_{t}+w_{t+1},x_t)=Cov(\phi x_t,x_t)=\phi Var(x_t)=\phi \gamma(0)
+$$
+
+Then we can find the log-one autocorrelation easily:\
+
+$$
+\rho(1)=\frac{\gamma(1)}{\gamma(0)}=\frac{\phi \gamma(0)}{\gamma(0)}=\phi
+$$
+
+2.5)
+
+We have $x_t=\delta + x_{t-1}+w_t$ with $x_0=0$ and $w_t \sim wn(0,\sigma^2_w)$.
+
+a\)
+
+To show this we start expanding $x_{t-1}$:
+
+$$
+x_t=\delta+\delta+x_{t-2}+w_{t-1}+w_t=\delta+\delta+\delta+x_{t-3}+w_{t-2}+w_{t-1}+w_t=\delta t+\sum_{k=1}^t w_k
+$$
+
+b\)
+
+$$
+E[x_t]=E[\delta t]+\sum_{k=1}^tw_k]=\delta t
+$$
+
+To find autocovariance I start with $\gamma(t,t)$:
+
+$$
+\gamma(0)=Var(x_t)=Var(\delta t+\sum_{k=1}^tw_k)=t \sigma^2_w
+$$
+
+Then $\gamma(t+1,t)$:
+
+$$
+\gamma(t+1,t)=Cov(x_{t+1},x_t)=Cov(\delta(t+1)+\sum_{k=1}^{t+1}w_k,\delta t +\sum_{k=1}^t w_k)=t \sigma^2_w
+$$
+
+The pattern becomes clear, the number of matching terms is what determines the coefficient in front of $\sigma_w^2$. Or in other terms:
+
+$$
+\gamma(s,t)=\min \{s,t \} \sigma_w^2
+$$
+
+c)
+
+Stationary series have constant expected value that does not depend on t. $E[x_t]=\delta t$ explicitly depends on t.
+
+d\)
+
+$$
+p_x(t-1,t)=\sqrt{\frac{t-1}{t}}, \lim_{t \rightarrow \inf}(\frac{t-1}{t})=1, \text{ so }\lim_{t \rightarrow \inf}\sqrt{\frac{t-1}{t}}=1
+$$
+
+This suggests that as we look farther and farther into the future, points that are near each other are related more and more.
+
+e\)
+
+I would use the transformation $y_t=x_t-\delta-x_{t-1}$. To prove this is stationary we start with its expected value:
+
+$$
+E[y_t]=E[x_t-\delta-x_{t-1}]=E[\delta+x_{t-1}+w_t-\delta-x_{t-1}]=E[w_t]=0
+$$
+
+Expected value is constant and does not depend on t.
+
+Next we look at autocovariance, starting with $\gamma(0)$:
+
+$$
+\gamma(0)=Var(y_t)=Var(w_t)=\sigma_w^2
+$$
+
+Next $\gamma(1)$:
+
+$$
+\gamma(1)=Cov(y_{t+1},y_t)=Cov(x_{t+1}-\delta-x_t,x_t-\delta-x_{t-1})=Cov(w_{t+1},w_t)=0
+$$
+
+So we have the autocovariance function of:
+
+$$
+\gamma(h)=\begin{cases} \sigma_w^2 & h=0 \\ 0 & h \geq1\end{cases}
+$$
+
+Since autocovariance only depends on lag, this is a stationary series.
+
+2.6)
+
+I would treat this data as non stationary. The first necessary aspect of a stationary series is that expected value is constant and does not depend on t. There is an increasing trend in the data, as t increases the values of temperature deviations are increasing. So the expected value of $x_t$ depends on t.
+
+2.9)
+
+We have $x_t=w_tw_{t-1}$ with $w_t$ as white noise.
+
+$$
+E[x_t]=E[w_t w_{t-1}]=E[(w_t-0)(w_{t-1}-0)]=Cov(w_t,w_{t-1})=0
+$$
+
+Starting with $\gamma(t,t)$:
+
+$$
+\gamma(t,t)=Var(x_t)=Var(w_tw_{t-1})=E[(w_tw_{t-1}-\mu_{x_t})^2]=E[(w_tw_{t-1})^2]=Cov(w_t,w_{t-1})=0
+$$
+
+Then $\gamma(t+1,t)$
+
 # 2.
 
 We have $X_1$ with $Var(X_1)=1$ and $X_2$ with $Var(X_2)=4$, and $Cov(X_1,X_2)=-2$.
