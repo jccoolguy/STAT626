@@ -222,7 +222,7 @@ $$
 \gamma(s,t)=\min \{s,t \} \sigma_w^2
 $$
 
-c)
+c\)
 
 Stationary series have constant expected value that does not depend on t. $E[x_t]=\delta t$ explicitly depends on t.
 
@@ -273,20 +273,38 @@ I would treat this data as non stationary. The first necessary aspect of a stati
 We have $x_t=w_tw_{t-1}$ with $w_t$ as white noise.
 
 $$
-E[x_t]=E[w_t w_{t-1}]=E[(w_t-0)(w_{t-1}-0)]=Cov(w_t,w_{t-1})=0
+E[x_t]=E[w_t w_{t-1}]
+$$
+
+Since $w_t$ is a white noise process, each $w_i$ is independent:
+
+$$
+E[w_tw_{t-1}]=E[w_t]E[w_{t-1}]=0
 $$
 
 Starting with $\gamma(t,t)$:
 
 $$
-\gamma(t,t)=Var(x_t)=Var(w_tw_{t-1})=E[(w_tw_{t-1}-\mu_{x_t})^2]=E[(w_tw_{t-1})^2]=Cov(w_t,w_{t-1})=0
+\gamma(t,t)=Var(x_t)=Var(w_tw_{t-1})=E[(w_tw_{t-1}-\mu_{x_t})^2]=E[(w_tw_{t-1})^2]=E[w_t^2]E[w_{t-1}^2]=\sigma_w^4
 $$
 
 Then $\gamma(t+1,t)$:
 
 $$
-\gamma(t+1,t)=Cov(x_{t+1},x_t)=Cov(w_{t+1}w_t,w_tw_{t-1})=E[(w_{t+1}w_t)(w_t w_{t-1})]
+\gamma(t+1,t)=Cov(x_{t+1},x_t)=Cov(w_{t+1}w_t,w_tw_{t-1})
 $$
+
+$$
+=E[(w_{t+1}w_t)(w_t w_{t-1})]=E[w_{t+1}w_t^2w_{t-1}]=E[w_{t+1}]E[w_t^2]E[w_{t-1}]=0
+$$
+
+And it will continue being 0 as lag increases so:
+
+$$
+\gamma(h)=\begin{cases} \sigma_w^4 & h =0 \\ 0 & h \geq1\end{cases}
+$$
+
+Since expected value is constant and does not depend on $t$ and the autocovariance function only depends on lag, we can say that $x_t$ is stationary.
 
 # 2.
 
@@ -319,3 +337,85 @@ $$
 $$
 c=Cov(X_1,X_2)/Var(X_2)=\frac{-2}{4}=-1/2
 $$
+
+# 3.
+
+My UIN starts with 6 and ends with 9 so we have the model:
+
+$$
+x_t=.6x_{t-1}-.9 x_{t-2}+w_t
+$$
+
+```{r, echo=FALSE}
+set.seed(121)
+w = rnorm(250 + 50)
+x = filter(w, filter = c(.6,-.9), method = "recursive")[-(1:50)]
+tsplot(x, main="autoregression", col = 4)
+y = filter(w, filter = c(1.5,-.75), method = "recursive")[-(1:50)]
+lines(y)
+```
+
+Blue is the UIN series, black is the original series.
+
+NO
+
+b\)
+
+These two time series have similar [magnitude]{.underline} and do not seem to have [drift]{.underline} as both vary around 0.
+
+However they differ, the time series with my UIN digits as coefficients has faster [oscillations]{.underline} while the other time series is [smoother]{.underline} and looks like it has more defined [cycles.]{.underline}
+
+# 4.
+
+We have $x_t=w_{t-1}w_{t-2}(w_t+t)$ with $w_t \sim i.i.d.N(0,\sigma_w^2)$.
+
+$$
+E[x_t]=E[w_{t-1}w_{t-2}(w_t+t)]=E[w_{t-1}w_{t-2}w_t]+E[w_{t-1}w_{t-2}t]=E[w_{t-1}]E[w_{t-2}]E[w_t]+tE[w_{t-1}]E[w_{t-2}]=0
+$$
+
+To find the autocovariance function we start with $\gamma(t,t)$:
+
+$$
+\gamma(t+1,t)=Var(x_t)=Var(w_{t-1}w_{t-2}(w_t+t))=Var(w_{t-1}w_{t-2}w_t+w_{t-1}w_{t-2}t)
+$$
+
+$$
+Var(w_{t-1}w_{t-2}w_t)+Var(w_{t-1}w_{t-2}t)+2Cov(w_{t-1}w_{t-2}w_t,w_{t-1}w_{t-2}t)
+$$
+
+$$
+E[w_{t-1}^2w_{t-2}^2w_t^2]+t^2E[w_{t-1}^2w_{t-2}^2]+2tE[w_{t-1}^2w_{t-2}^2w_t]
+$$
+
+$$
+=\sigma_w^6+t^2 \sigma_w^4
+$$
+
+Next $\gamma(t+1,t)$:
+
+$$
+\gamma(t+1,t)=Cov(w_tw_{t-1}(w_{t+1}(t+1)),w_{t-1}w_{t-2}(w_t+t))
+$$
+
+$$
+=Cov(w_tw_{t-1}w_{t+1}+w_tw_{t-1}(t+1),w_{t-1}w_{t-2}w_t+w_{t-1}w_{t-2}t)
+$$
+
+$$
+=Cov(w_tw_{t-1}w_{t+1},w_{t-1}w_{t-2}w_t)+Cov(w_tw_{t-1}w_{t+1},w_{t-1}w_{t-2}t)
+$$
+
+$$
++Cov(w_tw_{t-1}(t+1),w_{t-1}w_{t-2}w_t)+Cov(w_tw_{t-1}(t+1),w_{t-1}w_{t-2}t)
+$$
+
+$$
+=E[w_t^2w_{t-1}^2w_{t+1}w_{t-2}]+tE[w_tw_{t-1}^2w_{t+1}w_{t-2}]+(t+1)E[w_t^2w_{t-1}^2w_{t-2}]+t(t+1)E[w_tw_{t-1}^2w_{t-2}]
+$$
+
+Each of these terms have at least one $E[w_i]$, since $E[w_i]$ we end up with zero. So the autocovariance function is:
+
+$$
+\gamma(t,s)= \begin{cases} \sigma_w^6+t^2 \sigma_w^4 & s = t \\
+0 & s\neq t\end{cases}
+$$ We can say that $x_t$ is not stationary because the covariance function depends on the actual value t, and not the lag $|s-t|$.
