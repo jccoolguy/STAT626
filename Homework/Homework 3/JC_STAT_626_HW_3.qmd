@@ -1,0 +1,190 @@
+---
+title: "Homework 3"
+author: "Jack Cunningham"
+format: pdf
+editor: visual
+---
+
+```{r}
+library(astsa)
+```
+
+# I.
+
+2.10)
+
+We have $x_{t}=\mu+w_t+\theta w_{t-1}, \quad w_t \sim wn(0,\sigma^2_w)$.
+
+a\)
+
+$$
+E[x_t]=E[\mu+w_t+\theta w_{t-1}]=\mu+0+0=\mu
+$$
+
+b\)
+
+$$
+\gamma_x(0)=Var(x_t)=Var(\mu+w_t+\theta w_{t-1})=Var(w_t)+\theta^2Var(w_{t-1})=\sigma_w^2(1+\theta^2)
+$$
+
+$$
+\gamma_x(1)=Cov(x_{t+1},x_t)=Cov(\mu+w_{t+1}+\theta w_{t},\mu+w_t+\theta w_{t-1})=Cov(\theta w_t,w_t)=\sigma_w^2 \theta
+$$
+
+$$
+\gamma_x(-1)=Cov(x_{t-1},x_t)=Cov(\mu+w_{t-1}+\theta w_{t-2},\mu + w+\theta w_{t-1})=Cov(w_{t-1},\theta w_{t-1})=\sigma^2_w \theta 
+$$
+
+c\)
+
+For $x_t$ to be stationary expected value needs to be constant and not depend on t. The Auto-Covariance function needs to depend only on the lag $h=|s-t|$ and not the time $s$ or $t$. We can see both of these are met in the last two results. For $x_t$ to be stationary for all $\theta \in \mathbb{R}$ we simply need to show that $\gamma_x (0)=Var(x)$ is always non negative. Since $(1+\theta^2)$ is always non negative, we can say that $x_t$ is stationary for all $\theta \in \mathbb{R}$.
+
+d\)
+
+We have $Var(\bar{x})=\gamma_x(0)/n$ since $x_t$ is white noise.
+
+i\)
+
+$$
+Var(\bar{x})=\gamma_x(0)/n=2 \sigma_w^2/n
+$$
+
+ii\)
+
+$$
+Var(\bar{x})=\gamma_x(0)/n=\sigma_w^2/n
+$$
+
+iii)
+
+$$
+Var(\bar{x})=\gamma_x(0)/n=2 \sigma_w^2/n
+$$
+
+e\)
+
+The accuracy in the estimate of $\mu$ is best when $\theta = 0$, the variance of our estimate is 1/2 that of $\theta = 1 \text{ and } \theta = -1$.
+
+2.11)
+
+a\)
+
+We are generating the series $x_t=w_t$ where $w_t \sim wn(0,\sigma_w^2)$.
+
+```{r}
+set.seed(3)
+w = rnorm(500)
+acf(w, lag.max = 20, plot = FALSE)
+```
+
+We find the actual ACF:
+
+$$
+\gamma_x(0)=Var(x_t)=\sigma_w^2
+$$
+
+$$
+\gamma_x(1)=Cov(x_t,x_{t-1})=Cov(w_t,w_{t-1})=0
+$$
+
+So:
+
+$$
+\gamma_x(h) = \begin{cases} \sigma_w^2 & h = 0 \\ 0 &h \geq1\end{cases}
+$$
+
+And then the actual ACF is:
+
+$$
+\rho(h)= \begin{cases} 1 & h = 0 \\ 0 & h \geq1\end{cases}
+$$
+
+We can see that the sample ACF varies slightly around the true value 0.
+
+b\)
+
+```{r}
+set.seed(4)
+w_2 = rnorm(50)
+acf(w_2, lag.max = 20, plot = FALSE)
+```
+
+Now the estimates of the ACF vary more than with $n = 500$.
+
+2.12)
+
+We are generating the series $v_t=\frac{1}{3}(w_{t-1}+w_t+w_{t+1})$ where $w_t \sim wn(0,\sigma_w^2)$.
+
+```{r}
+set.seed(11)
+w = rnorm(500+51)
+v = filter(w, sides = 2, filter = rep(1/3, 3))[100:500]
+acf(v, lag.max = 20, plot = TRUE)
+acf(v, lag.max = 20, plot = FALSE)
+```
+
+The actual ACF is as follows:
+
+$$
+\gamma_v(0)=Var(v_t)=\frac{1}{3}\sigma_w^2
+$$
+
+$$
+\gamma_v(1)=Cov(v_{t+1},v_t)= Cov(\frac{1}{3}(w_t+w_{t+1}+w_{t+2}),\frac{1}{3}(w_{t-1}+w_t+w_{t+1})=\frac{2}{9} \sigma_w^2
+$$
+
+$$
+\gamma_v(2)=Cov(v_{t+2},v_t)= Cov(\frac{1}{3}(w_{t+1}+w_{t+2}+w_{t+3}),\frac{1}{3}(w_{t-1}+w_t+w_{t+1})=\frac{1}{9} \sigma_w^2
+$$
+
+So we have:
+
+$$
+\gamma_v(h)= \begin{cases} \frac{3}{9} \sigma_w^2 & h = 0 \\
+\frac{2}{9} \sigma_w^2 & h = 1 \\ \frac{1}{9}\sigma_w^2 & h = 2 \\ 0 & h \geq 3\end{cases}
+$$
+
+And the ACF is as follows:
+
+$$
+\rho_v(h) = \begin{cases} 1 & h = 0 \\ \frac{2}{3} & h = 1 \\ \frac{1}{3} & h=2 \\ 0 & h \geq 3\\ \end{cases}
+$$
+
+The sample ACF is pretty close to the true values.
+
+b\)
+
+```{r}
+set.seed(15)
+w_2 = rnorm(50+51)
+v_2 = filter(w, sides = 2, filter = rep(1/3, 3))[2:51]
+acf(v_2, lag.max = 20, plot = TRUE)
+acf(v_2, lag.max = 20, plot = FALSE)
+```
+
+We can see that the estimates start to vary from the true values by quite a bit, lag 2 is .169 which is quite far from the true 1/3, and lags 3 and 4 are both far from 0. By reducing n we have increased the variance in our estimator.
+
+2.13)
+
+```{r}
+set.seed(1000)
+w = rnorm(250 + 50)
+x = filter(w, filter = c(1.5, -.75), method = "recursive")[-(1:50)]
+acf(x, lag.max = 50, plot = TRUE)
+```
+
+We can see a strong negative correlated cycle starting at lag 4, that alternates to positive correlation and back to negative correlation about every 8 observations. The structure gradually fades to near zero as observations become more distant.
+
+2.14)
+
+```{r, fig.height=25, fig.width=10}
+t = 1:500
+cs = 2*cos(2*pi*(t+15)/50)
+w = rnorm(500)
+par(mfrow = c(3,1))
+acf(cs,lag.max = 100, plot = TRUE)
+acf(cs + w,lag.max = 100, plot = TRUE)
+acf(cs + 5*w,lag.max = 100, plot = TRUE)
+```
+
+We can see that as the white noise component becomes larger the magnitude of the cycle becomes smaller in the ACF.
