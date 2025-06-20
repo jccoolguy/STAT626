@@ -55,7 +55,7 @@ $$
 Var(\bar{x})=\gamma_x(0)/n=\sigma_w^2/n
 $$
 
-iii)
+iii) 
 
 $$
 Var(\bar{x})=\gamma_x(0)/n=2 \sigma_w^2/n
@@ -188,3 +188,24 @@ acf(cs + 5*w,lag.max = 100, plot = TRUE)
 ```
 
 We can see that as the white noise component becomes larger the magnitude of the cycle becomes smaller in the ACF.
+
+# II.
+
+# a)
+
+```{r}
+set.seed(15)
+w_1 = rnorm(100)
+w_2 = rnorm(100)
+
+x = cumsum(w_1)
+y = cumsum(w_2)
+```
+
+i\)
+
+```{r}
+plot(x,y, xlim = c(-5, 20), ylim = c(-20, 5))
+```
+
+There appears to be a pattern of negative correlation between x and y.
