@@ -209,3 +209,81 @@ plot(x,y, xlim = c(-5, 20), ylim = c(-20, 5))
 ```
 
 There appears to be a pattern of negative correlation between x and y.
+
+ii\)
+
+I believe $H_0$ would be rejected in this case, the scatter plot shows a strong negative association between x and y. This will lead to the estimate $\hat{\beta_1}$ being quite large.
+
+In general though, I would expect $H_0:\beta_1=0$ to not be rejected because x and y have no actual relationship with each other.
+
+iii\)
+
+```{r}
+model = lm(y~x)
+summary(model)$coefficients[2,]
+```
+
+We can see that the null hypothesis of $\beta_1=0$ is rejected at $\alpha = .05$.
+
+b\)
+
+```{r}
+set.seed(50)
+reject = rep(0,1000)
+for(i in 1:1000){
+  w_1 = rnorm(100)
+  w_2 = rnorm(100)
+  x = cumsum(w_1)
+  y = cumsum(w_2)
+  model = lm(y~x)
+  p_value = summary(model)$coefficients[2,4]
+  ifelse(p_value < .05, reject[i] <-  "Rejected", reject[i] <-  "Not Rejected")
+}
+table(reject)
+```
+
+We can see that $H_0:\beta_1 = 0$ is rejected `r as.integer(table(reject)[2])` of the 1000 trials, this is surprising to me. I expected $H_0$ to be rejected around the expected 5% of times with this many trials since we know there is no relationship between x and y.
+
+One of the assumptions that is placed upon a linear regression model is that since we assume $e_i$ is i.i.d and normally distributed we also are assuming that Y is also i.i.d normal. We know this isn't true because $Y_1 \sim N(0,1)$ but for instance $Y_{20} \sim N(\sum_{i=1}^{19}Y_i,1)$ since this is a random walk model. I believe that the assumption of identical and independently distributed $Y_i$ being broken is what is causing this result.
+
+# III.
+
+1\)
+
+a,c,d
+
+2\)
+
+b
+
+3\)
+
+d
+
+4\)
+
+d
+
+5\)
+
+b
+
+6\)
+
+c
+
+7\)
+
+b/a (the expend feature falls far outside the range in our sample of 3.656 to 9.774, we can compute the interval but we shouldn't draw anything from it. The computed interval is a.)
+
+8\)
+
+a
+
+9\)
+
+e
+
+10\)
+
+d
