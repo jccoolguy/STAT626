@@ -219,8 +219,8 @@ In general though, I would expect $H_0:\beta_1=0$ to not be rejected because x a
 iii\)
 
 ```{r}
-model = lm(y~x)
-summary(model)$coefficients[2,]
+model_a = lm(y~x)
+summary(model_a)$coefficients[2,]
 ```
 
 We can see that the null hypothesis of $\beta_1=0$ is rejected at $\alpha = .05$.
@@ -244,7 +244,27 @@ table(reject)
 
 We can see that $H_0:\beta_1 = 0$ is rejected `r as.integer(table(reject)[2])` of the 1000 trials, this is surprising to me. I expected $H_0$ to be rejected around the expected 5% of times with this many trials since we know there is no relationship between x and y.
 
-One of the assumptions that is placed upon a linear regression model is that since we assume $e_i$ is i.i.d and normally distributed we also are assuming that Y is also i.i.d normal. We know this isn't true because $Y_1 \sim N(0,1)$ but for instance $Y_{20} \sim N(\sum_{i=1}^{19}Y_i,1)$ since this is a random walk model. I believe that the assumption of identical and independently distributed $Y_i$ being broken is what is causing this result.
+One of the assumptions that is placed upon a linear regression model is that that $e_i$ is i.i.d. normal. If we take a look at the qq plot we can see that assumption is violated.
+
+```{r}
+plot(model_a, which = 2)
+```
+
+Since we have the linear model:
+
+$$
+y_i=\beta_0+\beta_1 x_i+e_i
+$$
+
+We can solve for $e_i$:
+
+$$
+e_i=y_i-\beta_0-\beta_1 x_i
+$$
+
+We know that $y_i \sim N(\sum_{l=1}^{i-1}y_l,\sigma_w^2)$:
+
+So, the true distribution of $e_i$ is $N(\sum_{l=1}^{i-1}y_l-\beta_0-\beta_1x_i,\sigma^2_w)$ which shows that the distribution of $e_i$ changes as $i$ changes, violating the assumption of i.i.d errors.
 
 # III.
 
