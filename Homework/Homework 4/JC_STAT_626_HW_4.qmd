@@ -5,6 +5,10 @@ format: pdf
 editor: visual
 ---
 
+```{r}
+library(astsa)
+```
+
 # 1.
 
 3.5)
@@ -48,3 +52,77 @@ We can see that $\gamma(1)$ also depends only on lag h.
 This pattern continues on, with $\gamma(h)$ depending only on linear combinations of $\gamma_y(h)$ and thus depending only on h.
 
 With this we can say $x_t-x_{t-1}$ is a stationary process.
+
+3.6)
+
+```{r}
+n = length(varve)
+varve_1 = varve[1:(n/2)]
+varve_2 = varve[(n/2):n]
+var_1 = var(varve_1)
+var_2 = var(varve_2)
+```
+
+The sample variance in the first half of the data is `r round(var_1,3)` , in the second half of the data it is `r round(var_2,3)`. The large difference shows evidence of non constant variable, it seems variance is getting larger as time passes.
+
+A common technique to address non-constant variance is to apply a log transformation. This is attempted below:
+
+```{r,echo=FALSE}
+par(mfrow = c(2,1))
+log_varve = log(varve)
+log_varve_1 = log_varve[1:(n/2)]
+log_varve_2 = log_varve[(n/2):n]
+log_var_1 = var(log_varve_1)
+log_var_2 = var(log_varve_2)
+tsplot(varve, main = "varve", ylab = "", col = 4)
+tsplot(log_varve, main = "log(varve)",ylab = "",col = 4)
+```
+
+In the original Varve data there is strong evidence of non-constant variance visually, it can easily be seen that early oscillations have much smaller magnitude than later ones.
+
+The log transformation brings the oscillation magnitudes closer, approaching constant variance.
+
+A log transformation can also assist the transformation to normality.
+
+```{r,echo=FALSE, fig.height=10}
+par(mfrow = c(2,1))
+hist(varve, col = 4,breaks = 15)
+hist(log_varve, col = 4, main = "Histogram of log(varve)", breaks = 15)
+```
+
+The Varve data exhibits a long right tail. The log transformed varve data is close to symmetrical, moving it closer to normality.
+
+b\)
+
+```{r}
+tsplot(log_varve, col = 4,ylab = "",main = "log(varve)")
+```
+
+From time period 200 to 400 we can see a similar upward trend to the temperatures in figure 1.9.
+
+```{r}
+acf(log_varve)
+```
+
+The sample ACF shows evidence of prolonged positive correlation that trends to zero very slowly.
+
+d\)
+
+```{r}
+diff_log_varve = diff(log_varve)
+tsplot(diff_log_varve, main = "Differenced log(varve)",ylab = "",col = 4)
+```
+
+When examining the time series plot of the differenced log transformed varve we see fast choppy oscillations with no evidence of a trend or correlation. This plot looks similar to previous stationary series' that we have analyzed in the past.
+
+```{r}
+acf(diff_log_varve)
+```
+
+The sample ACF plot is consistent with the previous plot, the only lag with a significant auto-correlation is lag 1, after which the correlation quickly trends to zero consistent with the behavior we would expect in a stationary series.
+
+The differenced log transformed varve data can be interpreted as the year over year percentage change in global varve thickness from Massachusetts . This is because of the below:
+
+$$
+\log(y_t)-\log(y_{t-1})=\log(y_t/y_{t-1})\approx(y_t-y_{t-1})/y_{t-1}
+$$
