@@ -5,7 +5,7 @@ format: pdf
 editor: visual
 ---
 
-```{r}
+```{r,echo=FALSE}
 library(astsa)
 ```
 
@@ -44,7 +44,11 @@ $$
 $$
 
 $$
-=Cov(y_t,y_{t+1})-Cov(y_t,y_t)-Cov(y_{t-1},y_{t+1})+Cov(y_{t-1},y_t)=\gamma_y(1)-\gamma_y(0)-\gamma_y(2)+\gamma_y(1)=2\gamma_y(1)-\gamma_y(0)-\gamma_y(2)
+=Cov(y_t,y_{t+1})-Cov(y_t,y_t)-Cov(y_{t-1},y_{t+1})+Cov(y_{t-1},y_t)=\gamma_y(1)-\gamma_y(0)-\gamma_y(2)+\gamma_y(1)
+$$
+
+$$
+=2\gamma_y(1)-\gamma_y(0)-\gamma_y(2)
 $$
 
 We can see that $\gamma(1)$ also depends only on lag h.
@@ -55,7 +59,7 @@ With this we can say $x_t-x_{t-1}$ is a stationary process.
 
 3.6)
 
-```{r}
+```{r,echo=FALSE}
 n = length(varve)
 varve_1 = varve[1:(n/2)]
 varve_2 = varve[(n/2):n]
@@ -94,13 +98,13 @@ The Varve data exhibits a long right tail. The log transformed varve data is clo
 
 b\)
 
-```{r}
+```{r,echo=FALSE}
 tsplot(log_varve, col = 4,ylab = "",main = "log(varve)")
 ```
 
 From time period 200 to 400 we can see a similar upward trend to the temperatures in figure 1.9.
 
-```{r}
+```{r,echo=FALSE}
 acf(log_varve)
 ```
 
@@ -108,14 +112,14 @@ The sample ACF shows evidence of prolonged positive correlation that trends to z
 
 d\)
 
-```{r}
+```{r,echo=FALSE}
 diff_log_varve = diff(log_varve)
 tsplot(diff_log_varve, main = "Differenced log(varve)",ylab = "",col = 4)
 ```
 
 When examining the time series plot of the differenced log transformed varve we see fast choppy oscillations with no evidence of a trend or correlation. This plot looks similar to previous stationary series' that we have analyzed in the past.
 
-```{r}
+```{r,echo=FALSE}
 acf(diff_log_varve)
 ```
 
@@ -129,7 +133,7 @@ $$
 
 3.7)
 
-```{r}
+```{r,echo=FALSE}
  culer = c(rgb(.85,.30,.12,.6), rgb(.12,.65,.85,.6))
  tsplot(gtemp_land, col=culer[1], lwd=2, type="o", pch=20,
  ylab="Temperature Deviations", main="Global Warming")
@@ -140,7 +144,7 @@ $$
 
 We start with example 3.16 which used the moving average smoother. This used weights of 1/12 for all months but 1/24th at the end so the same month doesn't get double counted.\
 
-```{r}
+```{r,echo=FALSE}
 w = c(.5,rep(1,11),.5)/12
 land_averaged = filter(gtemp_land, sides = 2, filter = w)
 ocean_averaged = filter(gtemp_ocean, sides = 2, filter = w)
@@ -155,7 +159,7 @@ Compared to the original time series plot this is much smoother, removing the ch
 
 Example 3.17 used kernel smoothing. Kernel smoothing uses a weight function to average observations, the selection of bandwidth was 5 was chosen which would look at smoothing over a half decade.
 
-```{r}
+```{r,echo=FALSE}
 tsplot(ksmooth(time(gtemp_land), gtemp_land, "normal",bandwidth = 5), col=culer[1], lwd=2, type="o", pch=20,
  ylab="Temperature Deviations", main="Kernel Smooth Global Warming")
 lines(ksmooth(time(gtemp_ocean), gtemp_ocean,"normal", bandwidth = 5), col=culer[2], lwd=2, type="o", pch=20)
@@ -164,3 +168,416 @@ legend("topleft", col=culer, lty=1, lwd=2, pch=20, legend=c("Land
 ```
 
 This plot introduces more choppiness compared to the moving average smoothing, we can see the short term deviations more clearly. It still makes it easier to see the overall trends when compared to the original plot.
+
+Example 3.18 uses the Lowess method, which is similar to nearest neighborhood regression. In line with the example we use the 5% of data and then the default 2/3rd of data.
+
+```{r,echo=FALSE}
+tsplot(gtemp_land, col = culer[1])
+lines(lowess(gtemp_land, f = .05), lwd = 2, col = "red")
+lo = predict(loess(gtemp_land ~ time(gtemp_land)), se = TRUE)
+trnd = ts(lo$fit, start = 1850, freq = 1)
+lines(trnd, col = 6, lwd = 2)
+ L = trnd- qt(0.975, lo$df)*lo$se
+ U = trnd + qt(0.975, lo$df)*lo$se
+ xx = c(time(gtemp_land), rev(time(gtemp_land)))
+ yy = c(L, rev(U))
+polygon(xx, yy, border=8, col=gray(.6, alpha=.4) )
+
+lines(gtemp_ocean, col = culer[2])
+lines(lowess(gtemp_ocean, f = .05), lwd = 2, col = "blue")
+lo = predict(loess(gtemp_ocean ~ time(gtemp_ocean)), se = TRUE)
+trnd = ts(lo$fit, start = 1850, freq = 1)
+lines(trnd, col = "navy", lwd = 2)
+ L = trnd- qt(0.975, lo$df)*lo$se
+ U = trnd + qt(0.975, lo$df)*lo$se
+ xx = c(time(gtemp_ocean), rev(time(gtemp_ocean)))
+ yy = c(L, rev(U))
+polygon(xx, yy, border=8, col=gray(.6, alpha=.4) )
+```
+
+We can see that when the loess has a small smoother span like 5% it performs very similarly to the previous two approaches. When it is set to a large amount of the data, like the default of 2/3, it shows a very smooth trend that ignores most local oscillations.
+
+4.2)
+
+We have the model $x_t=\phi x_{t-1}+w_t$ with $w_t \sim wn(0,\sigma_w^2)$ and $|\phi|<1$ and constant and $x_0 = w_0$.
+
+a\)
+
+We substitute in $x_{t-1}$:
+
+$$
+x_t=\phi (\phi x_{t-2} + w_{t-1})+w_t=\phi^2 x_{t-2}+\phi w_{t-1}+w_t
+$$
+
+We substitute in $x_{t-2}$:
+
+$$
+x_{t}=\phi^2 (\phi x_{t-3}+w_{t-2})+\phi w_{t-1}+w_t =\phi^3 x_{t-3}+\phi^2 w_{t-2}+\phi w_{t-1}+w_{t}
+$$
+
+Then, since $x_0=w_0$, we can say:
+
+$$
+x_{t}=\sum_{j=0}^t \phi^{j} w_{t-j}
+$$ b)
+
+$$
+E[x_t]=E[\sum_{j=0}^t \phi^{j} w_{t-j}]=\sum_{j=0}^t\phi^jE[w_{t-j}]=0
+$$
+
+c\)
+
+$$
+Var(x_t)=Var(\sum_{j=0}^t \phi^j w_{t-j})=\sum_{j=0}^t \phi^{2j}Var(w_{t-j})=\sum_{j=0}^t\phi^{2j} \sigma_w^2
+$$
+
+We recognize this as a geometric series. We know the below:
+
+$$
+a\sum_{j=0}^t r^j=a(1-r^{t+1})/(1-r)
+$$
+
+So:
+
+$$
+\sigma_w^2\sum_{j=0}^t \phi^{2j}=\sigma_w^2 \frac{1-\phi^{2(t+1)}}{1-\phi^{2}}
+$$
+
+d\)
+
+Starting with $h =1$ since we already found $Var(x_t)$:
+
+$$
+\gamma(1)=Cov(x_{t+1},x_{t})=Cov(\phi x_{t}+w_{t+1},x_t)=\phi Var(x_t)
+$$
+
+With $h=2$:
+
+$$
+\gamma(2)=Cov(x_{t+2},x_t)=Cov(\phi x_{t+1}+w_{t+2},x_t)=Cov(\phi(\phi x_{t}+w_{t+1})w_{t+1},x_t)=Cov(\phi^2 x_t+\phi w_{t+1}+w_{t+2},x_t)=\phi^2 Var(x_t)
+$$
+
+The pattern is clear, this leaves us with:
+
+$$
+\gamma(h)=\phi^h Var(x_t)
+$$
+
+e\)
+
+Since $Var(x_t)$ depends on t, $x_t$ is not stationary.
+
+f\)
+
+As $t \rightarrow \infty$ we have:
+
+$$
+\lim _{t \rightarrow} \infty Var(x_t)=\frac{\sigma_w^2}{1-\phi^2}(1 - \lim_{t \rightarrow \infty}\phi^{2(t+1)})
+$$Since $|\phi|<1$ as $t$ tends towards infinity $\lim_{t \rightarrow \infty} \phi^{2(t+1)}=0$ . So asymptotically we would have:
+
+$$
+Var(x_t)=\frac{\sigma_w^2}{1-\phi^2}
+$$
+
+And also:
+
+$$
+\phi(h)=\phi^h \frac{\sigma_w^2}{1-\phi^2}
+$$
+
+Which depends only on lag h. So as t approaches infinity the auto-covariance function of $x_t$ tends toward only depending on h. In that way $x_t$ is asymptotically stationary.
+
+g\)
+
+We could use the simulated i.i.d values by using the form $x_{t}=\sum_{j=0}^t \phi^j w_{t-j}$ and selecting a certain $\phi$ value. Then the cumulative sum would be the n observations of the stationary AR(1) model, provided n is large to invoke the asymptotic stationary result.
+
+h\)
+
+If $x_0=w_0/\sqrt{1-\phi^2}$ then:
+
+$$
+Var(x_0)=\sigma_w^2/(1-\phi^2)
+$$
+
+Then $x_1=\phi x_{0}+ w_t$ which would have variance:
+
+$$
+Var(x_1)=\phi^2\frac{\sigma_w^2}{1-\phi^2}+\sigma_w^2=\frac{\phi^2 \sigma^2_w+(1-\phi^2)\sigma_w^2}{1-\phi^2}=\frac{\sigma_w^2}{1-\phi^2}
+$$ This pattern continues, so $Var(x_t)$ does not depend on t. Since the auto-covariance function is:
+
+$$
+\gamma(h)=\phi^h Var(x_t)
+$$
+
+We can say that $\gamma(h)$ does not depend on t, as $Var(x_t)$ does not depend on t. With this restriction $x_t$ is now stationary.
+
+4.3)
+
+We have two models:
+
+$$
+(i) \quad x_t=.80 x_{t-1} -.15 x_{t-2}+w_t -.30 w_{t-1}
+$$
+
+$$
+(ii) \quad x_{t}=x_{t-1}-.50 x_{t-2}+w_t-w_{t-1}
+$$
+
+a\)
+
+We can show the concise form of both models:
+
+$$
+(i)\quad (1-.8B +.15B^2)x_t=(1-.3B)w_t
+$$
+
+$$
+(ii) \quad(1-1B+.5B^2) x_{t}=(1-1B)w_t
+$$
+
+We check the redundancy using R:
+
+i\)
+
+```{r,echo=FALSE}
+AR = c(1,-.8,+.15)
+MA = c(1,-.3)
+Mod(polyroot(AR))
+Mod(polyroot(MA))
+```
+
+The root of 3.33 indicates there is parameter redundancy.
+
+We can attempt to simplify the and find the like roots:
+
+$$
+(1-.8B+.15B^2)x_t=(1-.3B)w_t \quad(1-.3 B)(1-.5B)x_t =(1-.3B)w_t
+$$
+
+So we can represent the model as:
+
+$$
+(1-.5B)x_t=(1-.3B)w_t
+$$
+
+Or:
+
+$$
+x_t=0.5x_{t-1}+w_t-0.3w_{t-1}
+$$
+
+ii\)
+
+```{r,echo=FALSE}
+AR = c(1,-1,+.5)
+MA = c(1,-1)
+Mod(polyroot(AR))
+Mod(polyroot(MA))
+```
+
+The roots are not close, this indicates there is no redundancy.
+
+b\)
+
+Model i was reduced, so we can use R to compute the roots again:
+
+```{r,echo=FALSE}
+AR = c(1,-.5)
+MA = c(1,-.3)
+Mod(polyroot(AR))
+Mod(polyroot(MA))
+```
+
+The root of the AR term are greater than 1 so this is a casual model.
+
+The root of the MA term are greater than 1 so this is an invertible model.
+
+```{r,echo=FALSE}
+AR = c(1,-1,+.5)
+MA = c(1,-1)
+Mod(polyroot(AR))
+Mod(polyroot(MA))
+```
+
+The roots of the AR term is greater than 1, so this is a casual model.
+
+The root of the MA term is equal to 1, so this is not an invertible model.
+
+c\)
+
+Starting with model 1:
+
+```{r, fig.height=10,echo=FALSE}
+par(mfrow = c(2,1))
+model_i_ARMA_MA = ARMAtoMA(ar = .5, ma = -.3,50)
+model_i_ARMA_AR = ARMAtoAR(ar = .5, ma = -.3,50)
+plot(model_i_ARMA_MA, ylim = c(-.2,.2),ylab = "PSI",main = "Causual Check")
+plot(model_i_ARMA_AR, ylim = c(-.2,.2),ylab = "PSI",main = "Invertible Check")
+```
+
+We can see that both tend to zero, so this model is indeed casual and invertible.
+
+Then model 2:
+
+```{r, fig.height=10,echo=FALSE}
+par(mfrow = c(2,1))
+model_ii_ARMA_MA = ARMAtoMA(ar = c(1,-.5), ma = c(-1),50)
+model_ii_ARMA_AR = ARMAtoAR(ar = c(1,-.5), ma = c(-1),50)
+plot(model_ii_ARMA_MA, ylim = c(-.2,.2),ylab = "PSI",main = "Causual Check")
+plot(model_ii_ARMA_AR,ylab = "PSI",main = "Invertible Check")
+
+```
+
+The weights tend to zero in the casual check. They don't tend to zero in the invertible check, verifying our previous conclusion that model ii is not invertible.
+
+4.4)
+
+```{r,echo=FALSE}
+par(mfcol = c(2,3))
+ACF_1_1 = ARMAacf(ar = .6, ma = .9, 24)[-1]
+PACF_1_1 = ARMAacf(ar = .6, ma = .9, 24, pacf = TRUE)
+ACF_1_0 = ARMAacf(ar = .6, ma = 0, 24)[-1]
+PACF_1_0 = ARMAacf(ar = .6, ma = 0, 24, pacf = TRUE)
+ACF_0_1 = ARMAacf(ar = 0, ma = .9, 24)[-1]
+PACF_0_1 = ARMAacf(ar = 0, ma = .9, 24, pacf = TRUE)
+
+tsplot(ACF_1_1, type="h", xlab="lag", ylim=c(-.5,1),main = "ARMA(1,1)")
+abline(h=0)
+tsplot(PACF_1_1, type="h", xlab="lag", ylim=c(-.5,1))
+abline(h=0)
+
+tsplot(ACF_1_0, type="h", xlab="lag", ylim=c(-.5,1), main = "ARMA(1,0)")
+abline(h=0)
+tsplot(PACF_1_0, type="h", xlab="lag", ylim=c(-.5,1))
+abline(h=0)
+
+tsplot(ACF_0_1, type="h", xlab="lag", ylim=c(-.5,1), main = "ARMA(0,1)")
+abline(h=0)
+tsplot(PACF_0_1, type="h", xlab="lag", ylim=c(-.5,1))
+abline(h=0)
+
+```
+
+The ARMA(1,1) model has an ACF plot that tends toward 0 over time and a PACF that alternates positive and negative that tends toward zero.
+
+The ARMA(1,0) model has a similar ACF plot as ARMA(1,1), tending to 0 over time but with a smaller magnitude at all lags. The PACF that has correlation at lag 1 but none at later lags.
+
+The ARMA(0,1) model has a ACF plot that has a positive value at lag 1 but none at further lags. the PACF has alternating positive and negative correlations that tend toward zero but at a lower magnitude when compared to ARMA(1,1).
+
+Recognizing these patterns would allow us to choose the correct model from sample data.
+
+```{r,echo=FALSE, fig.height=8,fig.width=10}
+par(mfcol = c(2,3))
+ARMA_1_1_sim = arima.sim(list(order = c(1,0,1), ar = .6, ma = .9), n = 100)
+ARMA_1_0_sim = arima.sim(list(order = c(1,0,0), ar = .6), n = 100)
+ARMA_0_1_sim = arima.sim(list(order = c(0,0,1), ma = .9), n = 100)
+
+
+acf(ARMA_1_1_sim, main = "ARMA(1,1)")
+pacf(ARMA_1_1_sim)
+
+acf(ARMA_1_0_sim, main = "ARMA(1,0)")
+pacf(ARMA_1_0_sim)
+
+acf(ARMA_0_1_sim, main = "ARMA(0,1)")
+pacf(ARMA_0_1_sim)
+```
+
+The sample ACF and PACFs are pretty similar to the theoretical values, there are a few cases where there are lags that are significant that we wouldn't expect. In particular ARMA(1,0) has lags that are significant in the negative direction in lag 15 that we wouldn't expect as it should tend to zero. The same idea can be seen in AR(0,1) we expect all those lags to be zero past lag 1 but we see significance in lag 17.
+
+```{r,echo=FALSE, fig.height=8,fig.width=10}
+par(mfcol = c(2,3))
+ARMA_1_1_sim = arima.sim(list(order = c(1,0,1), ar = .6, ma = .9), n = 500)
+ARMA_1_0_sim = arima.sim(list(order = c(1,0,0), ar = .6), n = 500)
+ARMA_0_1_sim = arima.sim(list(order = c(0,0,1), ma = .9), n = 500)
+
+
+acf(ARMA_1_1_sim, main = "ARMA(1,1)")
+pacf(ARMA_1_1_sim)
+
+acf(ARMA_1_0_sim, main = "ARMA(1,0)")
+pacf(ARMA_1_0_sim)
+
+acf(ARMA_0_1_sim, main = "ARMA(0,1)")
+pacf(ARMA_0_1_sim)
+```
+
+With n = 500 the patterns are closer to the theoretical values but we see more correlations poking into significance, likely due to the increased power from increasing n.
+
+# II.
+
+a\)
+
+Stationarity is important because the covariance and mean functions can be estimated by averaging. Confidence intervals can be constructed using the CLT.
+
+b\)
+
+MA models are important because they allow us to estimate the weights of a filter of weight noise terms, helpful for any stationary time series.
+
+c\)
+
+AR models are important because we can estimate weights of a time series and ensure the present shock doesn't depend on future data.
+
+# III.
+
+a\)
+
+$$
+E[x_t]=E[w_{t+1}+\sum_{j=0}^{\infty} \phi^j w_{t-j}]=0
+$$
+
+$$
+Cov(x_{t},x_{t})=Var(x_t)=\sigma_w^2+\sum_{j=0}^{\infty}\phi^{2j} \sigma^2_w=\sigma_w^2 + \frac{\sigma_w^2}{1-\phi^2}
+$$
+
+$$
+Cov(x_{t+1},x_{t})=Cov(w_{t+2}+\sum_{j=0}^\infty \phi^j w_{t+1-j},w_{t+1}+\sum_{k=0}^{\infty}\phi^{k}w_{t-k})
+$$
+
+$$
+=Cov(w_{t+2},\sum_{k=0}^\infty\phi^{k}w_{t-k})+Cov(\sum_{j=0}^n \phi^j w_{t+1-j},\sum_{k=0}^\infty\phi^{k}w_{t-k})+Cov(\sum_{j=0}^{\infty} \phi^j w_{t+1-j},w_{t+1})
+$$
+
+$$
+=0+\frac{\sigma_w^2 \phi}{1-\phi^2}+\sigma_w^2
+$$
+
+Following that pattern, if we had $t+2$ we would have:
+
+$$
+Cov(x_{t+2},x_t)=Cov(\sum_{j=0}^n \phi^j w_{t+2-j},\sum_{k=0}^\infty \phi^k w_{t-k})+Cov(\sum_{j=0}^{\infty}\phi^{j}w_{t+2-j},w_{t+1})
+$$
+
+$$
+=\frac{\sigma_w^2 \phi^2}{1-\phi^2}+\phi \sigma^2_w
+$$
+
+So we can say that:
+
+$$
+\gamma(h)=\frac{\phi^h \sigma_w^2}{1-\phi^2}+\phi^h \sigma_w^2
+$$
+
+b\)
+
+For a process to be stationary its mean must be constant and not depend on t as well as having a covariance function that does not depend on t.
+
+Since the mean function is constant and does not depend on t and the autocovariance function does not depend on t, and only on lag h we can say this is stationary.
+
+c\)
+
+This process is clearly not casual because $x_t$ is directly dependent on a future shock $w_{t+1}$.
+
+# Multiple Choice
+
+1\)
+
+e
+
+2\)
+
+c
+
+3\)
+
+c
