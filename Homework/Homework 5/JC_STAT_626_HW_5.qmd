@@ -1,0 +1,231 @@
+---
+title: "Homework 5"
+author: "Jack Cunningham"
+format: pdf
+editor: visual
+---
+
+# I.
+
+```{r, loading packages}
+library(astsa)
+```
+
+4.4)
+
+```{r,echo=FALSE}
+par(mfcol = c(2,3))
+ACF_1_1 = ARMAacf(ar = .6, ma = .9, 24)[-1]
+PACF_1_1 = ARMAacf(ar = .6, ma = .9, 24, pacf = TRUE)
+ACF_1_0 = ARMAacf(ar = .6, ma = 0, 24)[-1]
+PACF_1_0 = ARMAacf(ar = .6, ma = 0, 24, pacf = TRUE)
+ACF_0_1 = ARMAacf(ar = 0, ma = .9, 24)[-1]
+PACF_0_1 = ARMAacf(ar = 0, ma = .9, 24, pacf = TRUE)
+
+tsplot(ACF_1_1, type="h", xlab="lag", ylim=c(-.5,1),main = "ARMA(1,1)")
+abline(h=0)
+tsplot(PACF_1_1, type="h", xlab="lag", ylim=c(-.5,1))
+abline(h=0)
+
+tsplot(ACF_1_0, type="h", xlab="lag", ylim=c(-.5,1), main = "ARMA(1,0)")
+abline(h=0)
+tsplot(PACF_1_0, type="h", xlab="lag", ylim=c(-.5,1))
+abline(h=0)
+
+tsplot(ACF_0_1, type="h", xlab="lag", ylim=c(-.5,1), main = "ARMA(0,1)")
+abline(h=0)
+tsplot(PACF_0_1, type="h", xlab="lag", ylim=c(-.5,1))
+abline(h=0)
+```
+
+The ARMA(1,1) model has an ACF plot that tends toward 0 over time and a PACF that alternates positive and negative that tends toward zero.
+
+The ARMA(1,0) model has a similar ACF plot as ARMA(1,1), tending to 0 over time but with a smaller magnitude at all lags. The PACF that has correlation at lag 1 but none at later lags.
+
+The ARMA(0,1) model has a ACF plot that has a positive value at lag 1 but none at further lags. the PACF has alternating positive and negative correlations that tend toward zero but at a lower magnitude when compared to ARMA(1,1).
+
+Recognizing these patterns would allow us to choose the correct model from sample data.
+
+```{r,echo=FALSE, fig.height=8,fig.width=10}
+par(mfcol = c(2,3))
+ARMA_1_1_sim = arima.sim(list(order = c(1,0,1), ar = .6, ma = .9), n = 100)
+ARMA_1_0_sim = arima.sim(list(order = c(1,0,0), ar = .6), n = 100)
+ARMA_0_1_sim = arima.sim(list(order = c(0,0,1), ma = .9), n = 100)
+
+
+acf(ARMA_1_1_sim, main = "ARMA(1,1)")
+pacf(ARMA_1_1_sim)
+
+acf(ARMA_1_0_sim, main = "ARMA(1,0)")
+pacf(ARMA_1_0_sim)
+
+acf(ARMA_0_1_sim, main = "ARMA(0,1)")
+pacf(ARMA_0_1_sim)
+```
+
+The sample ACF and PACFs are pretty similar to the theoretical values, there are a few cases where there are lags that are significant that we wouldn't expect. In particular ARMA(1,0) has lags that are significant in the negative direction in lag 15 that we wouldn't expect as it should tend to zero. The same idea can be seen in AR(0,1) we expect all those lags to be zero past lag 1 but we see significance in lag 17.
+
+```{r,echo=FALSE, fig.height=8,fig.width=10}
+par(mfcol = c(2,3))
+ARMA_1_1_sim = arima.sim(list(order = c(1,0,1), ar = .6, ma = .9), n = 500)
+ARMA_1_0_sim = arima.sim(list(order = c(1,0,0), ar = .6), n = 500)
+ARMA_0_1_sim = arima.sim(list(order = c(0,0,1), ma = .9), n = 500)
+
+
+acf(ARMA_1_1_sim, main = "ARMA(1,1)")
+pacf(ARMA_1_1_sim)
+
+acf(ARMA_1_0_sim, main = "ARMA(1,0)")
+pacf(ARMA_1_0_sim)
+
+acf(ARMA_0_1_sim, main = "ARMA(0,1)")
+pacf(ARMA_0_1_sim)
+```
+
+With n = 500 the patterns are closer to the theoretical values but we see more correlations poking into significance, likely due to the increased power from increasing n.
+
+4.5)
+
+a\)
+
+```{r}
+tsplot(diff(cmort), main = "Differenced Mortality")
+```
+
+The original mortality data appears to have a small downward trend, looking like a random walk with drift.
+
+The differenced mortality data looks like white noise.
+
+Differencing seems reasonable because when we are dealing with a random walk with drift situation the operation yields a stationary process.
+
+b\)
+
+```{r, fig.width=10}
+par(mfrow = c(1,2))
+acf(diff(cmort), main = "ACF Differenced Mortality")
+pacf(diff(cmort), main = "PACF Differenced Mortality")
+```
+
+The ACF starts large and then tails to zero over time. The PACF at lag one is about -.5 and then cuts off.
+
+Using table 4.1, we can see that AR(1) makes sense for this data as the ACF tails off and the PACF cuts off after the first lag.
+
+c\)
+
+```{r,echo=FALSE, output = FALSE, message=FALSE}
+model <- sarima(diff(cmort), p = 1, d = 0, q = 0, no.constant = TRUE)
+```
+
+```{r,echo=FALSE}
+model$fit
+```
+
+The AR1 coefficient is clearly significant. The white noise variance is estimated at 33.81.
+
+d\)
+
+```{r,echo=FALSE,fig.width=8, fig.height=10}
+par(mfrow = c(2,2))
+acf(resid(model$fit), main = "Residual ACF")
+qqnorm(resid(model$fit))
+qqline(resid(model$fit), main = "Residuals Normal QQ Plot")
+tsplot(resid(model$fit), main = "Residuals")
+```
+
+We can see the residual ACF plot doesn't show any significant lags, the residuals appear normally distributed and the residual time series plot looks like white noise.
+
+e\)
+
+```{r,echo=FALSE}
+sarima.for(diff(cmort), n.ahead = 4, p = 1, d = 0, q = 0)
+```
+
+f\)
+
+The forecast and prediction interval is calculated through the m-step ahead forecast formula seen in formula 4.37. That is:
+
+$$
+x_{n+m}^n=\phi^{m}x_n
+$$
+
+This has the prediction error seen in formula 4.38:
+
+$$
+P_{n+m}^n=\sigma_w^2(1+\phi^2+ \dots+ \phi^{2(m-1)})
+$$
+
+g\)
+
+Using the SARIMA forecast function with (p = 0, d = 1, q = 1) we can see the forecast is 85.46562.
+
+```{r}
+sarima.for(cmort, n.ahead = 1, p = 0, d = 1, q = 1)
+```
+
+4.6)
+
+With an AR(1) model we have:\
+
+$$
+x_n=\phi x_{n-1}+w_n
+$$
+
+The step ahead forecast is the expected value of $E[x_{n+m}]$. We start with $m = 1$:
+
+$$
+E[x_{n+1}]=E[\phi x_{n}+w_{n+1}]=\phi x_n=x_{n+1}^n
+$$
+
+Then with $m = 2$:
+
+$$
+E[x_{n+2}]=E[\phi x_{n+1} +w_{n+2}]=\phi E[x_{n+1}]
+$$
+
+And we know that $E[x_{n+1}]=\phi x_n=x_{n+1}^n$ so:
+
+$$
+E[x_{n+2}]=\phi^2 x_n=x_{n+2}^n
+$$
+
+And we can say that generally we have:
+
+$$
+x_{n+m}^n=E[x_{n+m}]=\phi^m x_n
+$$
+
+Then we are tasked to show:
+
+$$
+E[(x_{n+m}-x_{n+m}^n)^2]=\sigma_w^2 \frac{1-\phi^{2m}}{1-\phi^2}
+$$
+
+Since we know that $x^n_{n+m}=E[x_{n+m}]$ , this is simply finding the variance of $x_{n+m}$:
+
+$$
+E[(x_{n+m}-x^n_{n+m})^2]=Var(x_{n+m})=Var(\phi x_{n+m-1}+w_{n+m})
+$$
+
+We can show $x_{n+m}$ as:
+
+$$
+x_{n+m}=\phi^{m}x_n+\sum_{i=n}^{n+m} \phi^{i-(n+m)} w_{i}
+$$
+
+Then we have:
+
+$$
+E[(x_{n+m}-x^{n}_{n+m})^2]=E[(\phi^m x_n+\sum_{i=n}^{n+m} \phi^{i -(n+m)}w_i-\phi^m x_n)^2]
+$$
+
+Since $E[\sum_{i=n}^{n+m} \phi^{i - (n+m)} w_i]=0$ , this we have:
+
+$$
+=Var(\sum_{i=n}^{n+m} \phi^{i - (n+m)} w_i)
+$$
+
+This is a geometric series, which is easier if we set $j = i-n$ leaving:
+
+$$
+Var(\sum_{j=0}^m \phi^{j-m}w_i)
+$$
