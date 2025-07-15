@@ -200,32 +200,26 @@ $$
 E[(x_{n+m}-x_{n+m}^n)^2]=\sigma_w^2 \frac{1-\phi^{2m}}{1-\phi^2}
 $$
 
-Since we know that $x^n_{n+m}=E[x_{n+m}]$ , this is simply finding the variance of $x_{n+m}$:
+We can write $x_{n+m}$ as:
 
 $$
-E[(x_{n+m}-x^n_{n+m})^2]=Var(x_{n+m})=Var(\phi x_{n+m-1}+w_{n+m})
+x_{n+m}=\phi^{m}x_n+\sum_{i=0}^{m-1} \phi^{i} w_{n+m-i}
 $$
 
-We can show $x_{n+m}$ as:
+Which we can substitute into $E[(x_{n+m}-x^{n}_{n+m})^2]$:
 
 $$
-x_{n+m}=\phi^{m}x_n+\sum_{i=n}^{n+m} \phi^{i-(n+m)} w_{i}
+E[(x_{n+m}-x^n_{n+m})^2]=E[(\phi^mx_n +\sum_{i=0}^{m-1} \phi^i w_{n+m-i}-\phi^m x_n)^2]=E[(\sum_{i=0}^{m-1} \phi^i w_{n+m-i})^2]
 $$
 
-Then we have:
+Since $E[\sum_{i=0}^{m-1} \phi^i w_{n+m-i}]=0$, we just need to find the variance of $\sum_{i=0}^{m-1} \phi^i w_{n+m-i}$:
 
 $$
-E[(x_{n+m}-x^{n}_{n+m})^2]=E[(\phi^m x_n+\sum_{i=n}^{n+m} \phi^{i -(n+m)}w_i-\phi^m x_n)^2]
+Var(\sum_{i=0}^{m-1} \phi^i w_{n+m-i})=\sum_{i=0}^{m-1} \phi^{2i} \sigma^2_w
 $$
 
-Since $E[\sum_{i=n}^{n+m} \phi^{i - (n+m)} w_i]=0$ , this we have:
+Which is a geometric series, so it equals
 
 $$
-=Var(\sum_{i=n}^{n+m} \phi^{i - (n+m)} w_i)
-$$
-
-This is a geometric series, which is easier if we set $j = i-n$ leaving:
-
-$$
-Var(\sum_{j=0}^m \phi^{j-m}w_i)
+=\sigma_w^2 (\frac{1-\phi^{2m}}{1-\phi^2})
 $$
