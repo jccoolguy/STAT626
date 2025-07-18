@@ -223,3 +223,338 @@ Which is a geometric series, so it equals
 $$
 =\sigma_w^2 (\frac{1-\phi^{2m}}{1-\phi^2})
 $$
+
+5.11)
+
+We start our model process by investigating the time series plot:
+
+```{r,echo=FALSE}
+tsplot(birth)
+```
+
+This plot looks a lot like a random walk process. Variance appears constant so no issues there. It looks like there are seasonal effects.
+
+I first try a difference to deal with the random walk process.
+
+```{r,echo=FALSE}
+tsplot(diff(birth))
+```
+
+This looks a lot closer to stationarity. To assess seasonality and choose p,q and P,Q we look at the ACF and PACF of the differenced data.
+
+```{r,echo=FALSE}
+par(mfrow = c(1,2))
+acf(diff(birth),lag.max = 60)
+pacf(diff(birth), lag.max = 60)
+```
+
+We see significant correlation between values a year apart. To go after this we different again using $x_{t-12}$:
+
+```{r,,echo=FALSE}
+tsplot(diff(diff(birth),12))
+```
+
+```{r,echo=FALSE}
+par(mfrow = c(1,2))
+acf(diff(diff(birth),12),lag.max = 60)
+pacf(diff(diff(birth),12), lag.max = 60)
+```
+
+Now consulting the 5.1 table, we see that the ACF cuts off after the first 12 month lag and the PACF seems to tail off in 12 month intervals.
+
+This would seem to indicate a $P = 0, Q = 1$ for the seasonal component of the $ARIMA(p,d,q) \times (P,D,Q)_s$.
+
+In the non-seasonal component there looks like evidence for $q = 1$ as the ACF cuts off after the first lag. There is also evidence of $p = 4$ as the PACF pokes out out the first four lags then cuts very close to zero.
+
+So the two candidate models I am considering are:
+
+$$
+ARIMA(0,1,1) \times (0,1,1)_{12}
+$$ and:
+
+$$
+ARIMA(4,1,0) \times (0,1,1)_{12}
+$$
+
+The simpler model is the first one, so I start there:
+
+```{r, fig.height=10,fig.width=8,echo=FALSE}
+sarima(birth,p = 0, d = 1, q = 1, P = 0, D = 1, Q = 1,S = 12)
+```
+
+The $ARIMA(0,1,1) \times (0,1,1)_{12}$ model's biggest weakness is that there is still autocorrelation remaining in the residuals. We see this most clearly in the Ljung - Box statistic where the null hypothesis of white noise is rejected at each lag.
+
+Because of this I consider the other model $ARIMA(4,1,0) \times (0,1,1)_{12}$:
+
+```{r,fig.height=10,fig.width=8,echo=FALSE}
+sarima(birth,p = 4, d = 1, q = 0, P = 0, D = 1, Q = 1,S = 12)
+```
+
+This model looks a lot better. Variance looks constant, the ACF plot and Ljung- Box statistic plots support the assumption of white noise errors and residuals look normal in the qq-plot.
+
+Despite the diagnostics looking better, I am still concerned about the complexity of using p = 4. So I also try $ARMA(1,1,1) \times(0,1,1)_{12}$
+
+```{r, fig.height=10, fig.width=8,echo=FALSE}
+sarima(birth,p = 1, d = 1, q = 1, P = 0, D = 1, Q = 1,S = 12)
+```
+
+The models are comparable except for the p-value for Ljung-Box statistic plot, this model doesn't reject the null hypothesis around lag 7. But generally, the residuals are acceptable.
+
+To make a final decision I compare the AIC/BIC of the two models:
+
+| Model                              | AIC   | BIC   |
+|------------------------------------|-------|-------|
+| $ARIMA(0,1,4) \times(0,1,1)_{12}$  | 6.715 | 6.778 |
+| $ARIMA(1,1,1) \times (0,1,1)_{12}$ | 6.722 | 6.765 |
+
+Using AIC we would select the more complex model, using BIC we would select the simpler model. I choose $ARIMA(1,1,1) \times (0,1,1)_{12}$ due to it being a simpler model.
+
+The 12 month forecast is below:
+
+```{r,echo=FALSE}
+sarima.for(birth,p = 1, d = 1, q = 1, P = 0, D = 1, Q = 1,S = 12,n.ahead = 12)
+```
+
+5.13)
+
+a\)
+
+We start by fitting an ARIMA model to the monthly sales data.
+
+To begin, we look at the time series plot:
+
+```{r,echo=FALSE}
+tsplot(sales)
+```
+
+This looks like a combination of random walk and overall upward trend. To remedy this we difference:
+
+```{r,echo=FALSE}
+tsplot(diff(sales))
+```
+
+Variation appears constant, and this is a relatively smooth plot as nearby values look positively correlated. I can still see some evidence of upward trend from times 50 to 80 but for now I will look at the ACF and PACF of the data:
+
+```{r,echo=FALSE}
+par(mfrow = c(1,2))
+acf(diff(sales))
+pacf(diff(sales))
+```
+
+The ACF and PACF both seem to tail off, so my first model consideration is $ARIMA(1,1,1)$:
+
+```{r, fig.height=10, fig.width= 8,echo=FALSE}
+sarima(sales, p = 1, d = 1, q = 1)
+```
+
+Variance looks constant over time, the ACF and Ljung-Box statistic plot support the assumption of white noise residuals and the residuals look normally distributed. I am satisfied with the $ARIMA(1,1,1)$ model.
+
+b\)
+
+We start to investigate the relationship betweeen $\nabla S_t, \nabla L_t$ by using the CCF plot:
+
+```{r,echo=FALSE}
+ccf2(diff(sales), diff(lead))
+```
+
+The CCF plot shows significant correlation at lags 2 and 3, lets take at the lag plot for the earlier lags.
+
+```{r,fig.width=10, fig.height=12,echo=FALSE}
+par(mfcol = c(3,2))
+lag2.plot(diff(lead), diff(sales), 5)
+```
+
+In this plot we can see the nature of the relationship between the two series. At lag 2, despite having a correlation of -.38, the relationship does not look linear. At lag 3 however the relationship is highly linear and has a strong positive correlation of 0.72. For this reason we should consider adding this to our model.
+
+c\)
+
+We are asked to fit $\nabla S_t=\beta_0+\beta_1 \nabla L_{t-3}+x_t$. To do this we first fit the linear model, $\nabla S_t=\beta_0+\beta_1 \nabla L_{t-3}+\epsilon$ .
+
+```{r,echo=FALSE}
+library(zoo)
+pp = as.zoo(ts.intersect(diff_sales = diff(sales), diff_leadL3 = lag(diff(lead),-3)))
+summary(reg <- lm(pp$diff_sales ~ pp$diff_leadL3))
+```
+
+We can take a quick look at the diagnostic for this simple linear regression:
+
+```{r, fig.height = 8, fig.width = 8,echo=FALSE}
+par(mfrow = c(2,2))
+plot(reg)
+```
+
+The only concern would be some evidence of non-constant variance at the right end of the data. Other than that the model is well calibrated.
+
+We take the residuals of that model and use it to fit the ARMA $x_t$ model.
+
+```{r,echo=FALSE}
+par(mfrow = c(1,2))
+acf2(resid(reg))
+```
+
+The ACF tails off while the PACF cuts to zero after lag one. Using table 4.1 this indicates that we should use $ARMA(1,0)$.
+
+```{r, fig.height=10, fig.width=8,echo=FALSE}
+sarima(resid(reg), p = 1, d = 0, q = 0)
+```
+
+There is no pattern in the standardized residuals, variance looks steady, residuals look normally distributed and the ACF/Ljung-Box plots both indicate the residuals are white noise. This model fits very well.
+
+We can compare the two models using AIC/BIC:
+
+| Model                 | AIC   | BIC   |
+|-----------------------|-------|-------|
+| ARMA(1,1)             | 3.455 | 3.536 |
+| AR(1) with Lead Lag 3 | 2.443 | 2.505 |
+
+It is clear that the AR(1) model with the leading indicator is the superior model.
+
+# II.
+
+a\)
+
+```{r,echo=FALSE}
+set.seed(101)
+w_t_1 = rnorm(150)
+w_t_2 = rnorm(150)
+w_t   = rnorm(100)
+
+x_t_1 = filter(w_t_1, filter = c(.5), method = "recursive")[(-(1:50))]
+x_t_2 = filter(w_t_2, filter = c(rep(0,11),.9), method = "recursive")[(-(1:50))]
+
+y_t_1 = x_t_1 + cumsum(w_t)
+y_t_2 = x_t_2 + 5*cumsum(w_t)
+z_t   = 5*y_t_1 - y_t_2
+```
+
+Plotting:
+
+```{r, fig.height = 12,echo=FALSE}
+par(mfrow = c(3,1))
+tsplot(y_t_1, main = "yt1")
+tsplot(y_t_2, main = "yt2")
+tsplot(z_t,   main = "zt")
+```
+
+The plots are very smooth which makes me think of random walk and cyclic time series plots, causing me to doubt they are stationary.
+
+b\)
+
+For a series to be stationary expected value must be constant and not depend on t and the auto-covariance function must depend only on lag h.
+
+$$
+E[y_{t_1}]=E[x_{t1}+\sum_{j=1}^t w_j]=E[x_{t1}]=E[0.5 x_{t-1,1} +w_{t1}]=0
+$$
+
+We start with lag = 0 for the auto-covariance function:
+
+$$
+Cov(y_{t1},y_{t1})=Var(y_{t_1})=Var(x_{t1}+\sum_{j=1}^t w_j)=Var(x_{t1})+t \sigma_w^2=\frac{1}{1-.5^2}+t
+$$
+
+Then lag = 1:
+
+$$
+Cov(y_{t+1,1,},y_{t,1})=Cov(x_{t+1,1}+\sum_{j=1}^{t+1}w_j,x_t+\sum_{j=1}^{t}w_j)=Cov(x_{t+1},x_t)+Cov(\sum_{j=1}^{t+1} w_j,\sum_{j=1}^t w_j)=\gamma(1)_{x1}+t=.5\frac{1}{1-.5^2}+t
+$$
+
+And generally:
+
+$$
+Cov(y_{t+h,1},y_{t,1})=\phi^h \gamma_{x_1}(0)+t
+$$
+
+Where $\gamma_{x_1}(0)=\frac{1}{1-\phi^2}$ and $\phi=.5$.
+
+So $y_{t1}$ is not stationary because its autocovariance function depends on t.
+
+c\)
+
+We have $z_t=5y_{t1}-y_{t2}$. Starting with lag = 0:
+
+$$
+Cov(z_t,z_t)=Var(z_t)=Var(5y_{t_1}-y_{t2})=Var(5(x_{t1}+\sum_{j=1}^tw_j)-(x_{t2}+5 \sum_{j=1}^t w_j))=25Var(x_{t1})+Var(x_{t2})
+$$
+
+$$
+=25 \frac{1}{1-\phi_{x_1}^2}+\frac{1}{1-\phi^2_{x_2}}
+$$
+
+Where, for ease of notation $\phi_{x_1}=.5$ and $\phi_{x_{2}}=.9$.
+
+For lag=1:
+
+$$
+Cov(z_{t+1},z_t)=Cov(5y_{t+1,1}-y_{t+1,2},5y_{t,1}-y_{t,2})=Cov(5x_{t+1,t}-x_{t+1,2},5x_{t,1}-x_{t,2})=25\gamma(1)_{x1}+\gamma(1)x_{2}
+$$
+
+$$
+=25 \phi_{x_1} \frac{1}{1-\phi^2 _{x_1}}
+$$
+
+So the autocovariance function is:
+
+$$
+\gamma(h)=25 \gamma(h)_{x1}+\gamma(h)_{x2}
+$$
+
+Where:
+
+$$
+\gamma(h)_{x_1}=\begin{cases} \frac{1}{1-.5^2} & h=0\\\
+.5^h \gamma(0)_{x_1} & h\neq0\end{cases}
+$$
+
+and:
+
+$$
+\gamma(h)_{x_2}=.\begin{cases} \frac{1}{1-.9^2} & h=0\\
+.9^{k}\gamma(0)_{x_2} & h = 12k,k=1,2,.. \\ 
+0 & \text{otherwise} \end{cases}
+$$
+
+Since $E[z_t]=E[5y_{t1}-y_{t2}]=0$ , so constant and not depending on t and the auto-covariance function does not depend on t and only on the lag h we can say $z_t$ is a stationary process.
+
+d\)
+
+In part b we found that the reason why $y_{t1}$ was non-stationary was due to the sum of the white noise. in part c we found that $z_t$ was able to become stationary because it got rid of the sum of white noise leaving us with the stationary aspects of $y_{t1}$ and $y_{t2}$.
+
+e\)
+
+We start with lag 0 for the cross-covariance function:
+
+$$
+Cov(y_{t1},y_{t2})=Cov(x_{t1}+\sum_{j=1}^tw_j,x_{t2}+5\sum_{j=1}^t w_{j})=5t
+$$
+
+Then with lag 1:
+
+$$
+Cov(y_{t+1,1},y_{t,2})=Cov(x_{t+1,1}+\sum_{j=1}^{t+1}w_{j},x_{t2}+5 \sum_{j=1}^t w_j)=5t
+$$
+
+So when lag is greater than or equal to 0, the covariance is $5t$:
+
+But when lag is less than zero it is a bit more interesting:
+
+$$
+Cov(y_{t-1,1},y_{t,2})=Cov(\sum_{j=1}^{t-1} w_j,5 \sum_{j=1}^tw_j)=5(t-1)
+$$ So the cross-covariance function is:
+
+$$
+Cov(y_{t+h,1},y_{t,2})=\begin{cases}5t &h\geq0 \\ 5(t-h)& h <0  \end{cases}
+$$
+
+The cross-correlation function is:
+
+$$
+\rho_{xy}(y_{t+h,1},y_{t,2})=\frac{Cov(y_{t+h,1},y_{t,2})}{\sqrt{\gamma_{y1}(0) \gamma_{y_2}(0)}}
+$$
+
+The denominator would be:
+
+$$
+\sqrt{(\frac{1}{1-.5^2}+t)(\frac{1}{1-.9^2}+t)}
+$$
+
+The two time series are not jointly stationary because their cross-covariance function depends on t.
