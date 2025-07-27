@@ -1,0 +1,463 @@
+---
+title: "STAT 626 HW 6"
+author: "Jack Cunningham"
+format: pdf
+editor: visual
+---
+
+```{r}
+library(astsa)
+knitr::opts_chunk$set(echo = F)
+knitr::opts_chunk$set(warning = F)
+```
+
+# I.
+
+5.2)
+
+We start with a time series plot of GNP data:
+
+```{r}
+tsplot(gdp)
+```
+
+We see an upward trend over time, the first remedy would be to difference the data. We do so and plot again:
+
+```{r}
+tsplot(diff(gdp))
+```
+
+There is evidence of non-constant variance, as time passes the variance of the series increases. To remedy this we instead use $log(x_{t})-log(x_{t-1})$ , since we expect GNP to have stable and small percent changes:
+
+```{r}
+tsplot(diff(log(gdp)))
+```
+
+The data is now close to stationarity. So we plot the ACF and PACF to identify the dependence orders of the model.
+
+```{r}
+acf2(diff(log(gdp)))
+```
+
+The ACF drops to zero after two lags, PACF seems to tail off. My first model would therefore be a $ARIMA(0,1,2)$ model.
+
+We now fit the model:
+
+```{r, fig.height=10,fig.width=8}
+sarima(log(gdp), p = 0, d = 1, q = 2)
+```
+
+The residual plot looks pretty good, there does not appear to be correlation in the residuals according to the ACF plot or the Ljung-Box plot. Residuals appear close to normal with slight deviations in the tails. Standardized residuals seem to point towards some evidence of non-constant variance,but overall are close to stationarity. Non-constant variance could likely be remedied by a GARCH model but that falls outside the bounds of this question.
+
+I would select an $ARIMA(0,1,2)$ model with a log transformation.
+
+5.3)
+
+We start with a time series plot of the crude oil prices:
+
+```{r}
+tsplot(oil)
+```
+
+There is an upward trend, partially likely due to inflation, and a random walk component. There is also evidence of non-constant variance, so we apply a log difference like we did in 5.2.
+
+```{r}
+tsplot(diff(log(oil)))
+```
+
+This looks pretty close to stationarity, we note the periods of high volatility that are bunched together. This is most noticeable in 2009.
+
+We investigate the dependence orders of the model:
+
+```{r}
+acf2(diff(log(oil)))
+```
+
+There doesn't seem to be an obvious model to choose. Both the ACF and PACF seem to tail off to me, there aren't particularly satisfying lags to choose where they cut off. I'll start with an $ARIMA(1,1,1)$ model:
+
+```{r, fig.height=10, fig.width=8}
+sarima(log(oil), p = 1, d = 1, q = 1)
+```
+
+This fit seems inadequate, standardized residuals look stationary outside of the 2009 period. The normal qq-plot has significant deviation in the tails. There appears to still be correlation in the residuals, as evidenced by the ACF and Ljung-Box test.
+
+I try to fit a different model.
+
+```{r}
+acf2(diff(log(oil)))
+```
+
+A possible other option would be a $ARIMA(0,1,3)$ model as the ACF seems to cut off after lag 3 (lag 2 doesn't appear to be significant but lag 3 is) and the PACF generally tails off.
+
+```{r, fig.width=8,fig.height=10}
+sarima(log(oil), p = 0, d = 1, q = 3)
+```
+
+This model does a bit better than before. The standardized residual plot looks close to stationarity. There are still deviations in normality in the tails, there might be other methods to deal with this but in the ARIMA paradigm there isn't too much we can do. Those values in 2009 seem to throw off the tails. Residuals are closer to white noise, at most early lags the Ljung-Box statistic is greater than the p-value of 0.05 and the ACF plot is close to zero. At later lags the Ljung-Box statistic sticks very close to 0.05 and the ACF seems to point toward some autocorrelation.
+
+Overall the $ARIMA(0,1,3)$ seems to do okay, but improvements could be made if there was a model paradigm to address the non-constant variance and long tails.
+
+5.6)
+
+Starting with the time series plot:
+
+```{r}
+tsplot(so2)
+```
+
+There is a downward trend, so we difference.
+
+```{r}
+tsplot(diff(so2))
+```
+
+This looks close to stationarity, but there is some moderate evidence of non-constant variance. Variance seems to decrease over time. So we take a look at the plot of log-differenced SO2 data.
+
+```{r}
+tsplot(diff(log(so2)))
+```
+
+This looks really good, the series looks stationary. Variance now appears to be constant.
+
+We now investigate the dependence structure:
+
+```{r}
+acf2(diff(log(so2)))
+```
+
+It seems both ACF and PACF tail off, so we start with an $ARIMA(1,1,1)$ model. There could also be an argument for $ARIMA(0,1,1)$ because the second and third lags are pretty close to being insignificant. Or an $ARIMA(0,1,3)$ model because ACF drops close to zero after the third lag.
+
+```{r, fig.width=10,fig.height=8}
+sarima(log(so2),p = 1, d = 1, q = 1)
+```
+
+The standardized residuals look stationary, close to normally distributed with constant variance. There is evidence of autocorrelation remaining at shorter lags, and at yearly intervals. In this problem we are tasked to only fit an ARIMA model, so we try $ARIMA(0,1,3)$:
+
+```{r, fig.width = 8, fig.height = 10}
+sarima(log(so2), p = 0, d = 1, q = 3)
+```
+
+This model keeps the good aspects of before, and improves significantly on the autocorrelation in residuals. They now appear to be white noise.
+
+A comparison of AIC/BIC between the two models is:
+
+| Model           | AIC  | BIC  |
+|-----------------|------|------|
+| $ARIMA(1,1,1)$  | .502 | .536 |
+| $ARIMA(0,1,3)$  | .495 | .537 |
+
+AIC would choose $ARIMA(0,1,3)$, BIC would choose $ARIMA(1,1,1)$. I would select $ARIMA(0,1,3)$ because diagnostics are improved and AIC prefers it.
+
+A forecast of four time periods is plotted below:
+
+```{r}
+sarima.for(log(so2),n.ahead = 4,p = 0, d = 1, q = 3)
+```
+
+The 95% confidence intervals are:
+
+```{r,include=FALSE}
+point <- sarima.for(log(so2),n.ahead = 4, p = 0, d = 1, q = 3)$pred
+se <- sarima.for(log(so2),n.ahead = 4, p = 0, d = 1, q = 3)$se
+```
+
+```{r}
+prediction_intervals <- cbind(point - 1.96*se, point, point + 1.96*se)
+prediction_intervals
+```
+
+5.7)
+
+We start with a time series plot:
+
+```{r}
+tsplot(AirPassengers)
+```
+
+There is an upward trend, and what appears to be yearly seasonality. We first order difference and difference over 12 months.
+
+```{r}
+tsplot(diff(diff(AirPassengers),12))
+```
+
+There appears to be some evidence of non-constant variance, variance increases over time. In particular, after 1958 and twice in 1960 we see large moves that are not replicated in earlier portions of the series. So we apply a log transformation, and then difference again.
+
+```{r}
+tsplot(diff(diff(log(AirPassengers)),12))
+```
+
+This looks closer to constant variance, but there are several large changes early in the series. We stick with this as it looks stationary, and investigate the dependence structure.
+
+```{r}
+acf2(diff(diff(log(AirPassengers)),12))
+```
+
+First we look at the within seasonal effect by focusing on early lags. The ACF and PACF have similar behavior, both drop below significance after the first lag but become significant again at the third lag. So its not obvious how to move forward. One possible choice would be p = 1 and q = 0 since the PACF drops close to zero after the first lag and the ACF could be argued to tail off.
+
+In the seasonal effect we see the ACF have significance at lags 12, and then cutting off to zero at lag 24. The PACF comparatively seems to tail off. So a choice of P = 0, Q = 1 seems reasonable.
+
+So our first model is $ARIMA(1,1,0,0,1,1)_{12}$ on the log-transformed SO2 data.
+
+```{r, fig.width = 8, fig.height = 10}
+sarima(log(AirPassengers), p = 1, d = 1, q = 0, P = 0, D = 1, Q = 1, S = 12)
+```
+
+Standardized residuals have close to constant variance and are normally distributed. The ACF plot looks good at early lags, but some later lags jump out. The Ljung-Box statistic suggests at lower lags there is still some autocorrelation.
+
+While this model is close, its worth considering a competitor.
+
+The seasonal behavior seems to be well contained, so I don't change that. Rather I select p = 1, q = 1 because it can be argued that both the ACF and PACF tail off outside of auto-correlations close to 0 at lag 2.
+
+```{r, fig.width = 8, fig.height = 10}
+sarima(log(AirPassengers), p = 1, d = 1, q = 1, P = 0, D = 1, Q = 1, S = 12)
+```
+
+Residuals are similar, but we see improvement in auto-correlation at early lags in the Ljung-Box plot. I use AIC/BIC to help decide.
+
+| Model                     | AIC    | BIC    |
+|---------------------------|--------|--------|
+| $ARIMA(1,1,0,0,1,1)_{12}$ | -3.675 | -3.610 |
+| $ARIMA(1,1,1,0,1,1)_{12}$ | -3.679 | -3.591 |
+
+The AIC and BIC disagree, AIC chooses $ARIMA(1,1,1,0,1,1)_{12}$ and BIC chooses $ARIMA(1,1,0,0,1,1)_{12}$. I go with $ARIMA(1,1,0,0,1,1)_{12}$ because the ACF of residuals at early lags doesn't seem too concerning, and generally we prefer simper models.
+
+5.17)
+
+The $ARIMA(0,1,1)$ model can be written as:
+
+$$
+x_{t}=x_{t-1}+w_{t}-\lambda w_{t-1}
+$$
+
+If we have $y_{t}=x_t -x_{t-1}$ we have:
+
+$$
+y_{t}=x_{t-1}+w_t-\lambda w_{t-1}-x_{t-1}=w_t-\lambda w_{t-1}
+$$
+
+So, in terms of $y_i$ this is a MA(1) model. We can represent the invertible form:
+
+$$
+w_t=\sum_{j=0}^\infty \lambda^j y_{t-j}
+$$
+
+If we sub in $y_{t}=x_t -x_{t-1}$:
+
+$$
+w_t=\sum_{j=0}^\infty \lambda^j(x_{t-j}-x_{t-j-1})=\sum_{j=0}^\infty \lambda^j x_{t-j}-\sum_{j=0}^\infty \lambda^j x_{t-j-1}=x_{t}+\sum_{j=1}^\infty \lambda^j x_{t-j} - \sum_{j=0}^\infty \lambda^j x_{t-j-1} 
+$$
+
+$$
+=x_{t} +\sum_{j=1}^\infty \lambda^j x_{t-j} - \sum_{j=1}^\infty \lambda^j x_{t-j-1}+x_{t-1}
+$$
+
+Got a little stuck at this point, but once you get to 5.24:
+
+$$
+x_t =\sum_{j=1}^\infty (1-\lambda) \lambda^{j-1} x_{t-j}+w_t
+$$
+
+We can show:
+
+$$
+x^n_{n+1}=\sum_{j=1}^\infty(1-\lambda) \lambda^{j-1}x_{n+1-j}=(1-\lambda)x_{n} +\lambda x_{n}^{n-1}
+$$
+
+By using infinite geometric sum facts and backsubstitution. The $w_t$ term drops because we are taking expected value.
+
+8.3)
+
+We start with a time series plot of the log differenced (returns) of oil.
+
+```{r}
+tsplot(diff(log(oil)))
+```
+
+The tell tale sign of GARCH behavior is clusters of volatility, this is clearly present in the data and is most easily seen at the start of 2009.
+
+To start we look at the P/ACF of the returns:
+
+```{r}
+acf2(diff(log(oil)))
+```
+
+We previously chose $p = 0,q=3$ when we got our best fit of the model possible. We stick with that for now.
+
+Next we look at the P/ACF of the centered squared returns $(r_t -\hat{\mu_t})^2$. Following the example of 8.1, we plot the squared residuals from our $MA(3)$ model.
+
+```{r,include=FALSE}
+model_ma_3 <- sarima(log(oil), p = 0, d = 1, q = 3)
+ma_3_resids <- resid(model_ma_3$fit)
+```
+
+```{r}
+acf2(ma_3_resids^2)
+```
+
+Both the ACF and PACF of the squared residuals are large, confirming the GARCH effect, and tail off suggesting that we should use a GARCH(1,1) extension. Additionally, we have seen that errors were not normal in our previous attempt so we choose t-errors.
+
+```{r,include=FALSE}
+library(fGarch)
+library(xts)
+summary(oil_garch <- garchFit(~arma(0,3) + garch(1,1),
+                              data = diff(log(oil)), cond.dist = "std"))
+```
+
+We can see the impact of the conditional SD over that end of 2008-2009 period:
+
+```{r}
+plot(oil_garch, which = 3)
+```
+
+The model responds to the increased volatility effectively.
+
+```{r}
+plot(oil_garch, which = 10)
+```
+
+The ACF of residuals shows that we now have really good white noise behavior.
+
+```{r}
+plot(oil_garch, which = 13)
+```
+
+The standardized t distribution QQ-plot shows that residuals fit that distribution quite well with only a few deviations in the tail areas.
+
+# II.
+
+a\)
+
+We start our model process by investigating the time series plot:
+
+```{r,echo=FALSE}
+
+tsplot(birth)
+```
+
+This plot looks a lot like a random walk process. Variance appears constant so no issues there. It looks like there are seasonal effects.
+
+I first try a difference to deal with the random walk process.
+
+```{r,echo=FALSE}
+tsplot(diff(birth))
+```
+
+This looks a lot closer to stationarity. To assess seasonality and choose p,q and P,Q we look at the ACF and PACF of the differenced data.
+
+```{r,echo=FALSE}
+par(mfrow = c(1,2)) 
+acf(diff(birth),lag.max = 60) 
+pacf(diff(birth), lag.max = 60)
+```
+
+We see significant correlation between values a year apart. To go after this we different again using $x_{t-12}$:
+
+```{r,echo=FALSE}
+tsplot(diff(diff(birth),12))
+```
+
+```{r,echo=FALSE}
+par(mfrow = c(1,2)) 
+acf(diff(diff(birth),12),lag.max = 60)
+pacf(diff(diff(birth),12), lag.max = 60)
+```
+
+Now consulting the 5.1 table, we see that the ACF cuts off after the first 12 month lag and the PACF seems to tail off in 12 month intervals.
+
+This would seem to indicate a $P = 0, Q = 1$ for the seasonal component of the $ARIMA(p,d,q) \times (P,D,Q)_s$.
+
+In the non-seasonal component there looks like evidence for $q = 1$ as the ACF cuts off after the first lag. There is also evidence of $p = 4$ as the PACF pokes out out the first four lags then cuts very close to zero.
+
+So the two candidate models I am considering are:
+
+$$ ARIMA(0,1,1) \times (0,1,1)_{12} $$ and:
+
+$$ ARIMA(4,1,0) \times (0,1,1)_{12} $$
+
+The simpler model is the first one, so I start there:
+
+```{r, fig.height=10,fig.width=8,echo=FALSE}
+sarima(birth,p = 0, d = 1, q = 1, P = 0, D = 1, Q = 1,S = 12)
+```
+
+The $ARIMA(0,1,1) \times (0,1,1)_{12}$ model's biggest weakness is that there is still autocorrelation remaining in the residuals. We see this most clearly in the Ljung - Box statistic where the null hypothesis of white noise is rejected at each lag.
+
+Because of this I consider the other model $ARIMA(4,1,0) \times (0,1,1)_{12}$:
+
+```{r,fig.height=10,fig.width=8,echo=FALSE}
+sarima(birth,p = 4, d = 1, q = 0, P = 0, D = 1, Q = 1,S = 12)
+```
+
+This model looks a lot better. Variance looks constant, the ACF plot and Ljung- Box statistic plots support the assumption of white noise errors and residuals look normal in the qq-plot.
+
+Despite the diagnostics looking better, I am still concerned about the complexity of using p = 4. So I also try $ARMA(1,1,1) \times(0,1,1)_{12}$
+
+```{r, fig.height=10, fig.width=8,echo=FALSE}
+sarima(birth,p = 1, d = 1, q = 1, P = 0, D = 1, Q = 1,S = 12)
+```
+
+The models are comparable except for the p-value for Ljung-Box statistic plot, this model doesn't reject the null hypothesis around lag 7. But generally, the residuals are acceptable.
+
+To make a final decision I compare the AIC/BIC of the two models:
+
+| Model                              | AIC   | BIC   |
+|------------------------------------|-------|-------|
+| $ARIMA(0,1,4) \times(0,1,1)_{12}$  | 6.715 | 6.778 |
+| $ARIMA(1,1,1) \times (0,1,1)_{12}$ | 6.722 | 6.765 |
+
+Using AIC we would select the more complex model, using BIC we would select the simpler model. I choose $ARIMA(1,1,1) \times (0,1,1)_{12}$ due to it being a simpler model.
+
+The 12 month forecast is below:
+
+```{r,echo=FALSE}
+sarima.for(birth,p = 1, d = 1, q = 1, P = 0, D = 1, Q = 1,S = 12,n.ahead = 12)
+```
+
+b\)
+
+The Facebook Prophet model has three components, trend, seasonal and holiday. It is like a generalized additive model, and its trying to fit the curve of data as well as possible (which causes it to lose statistical inference compared to ARIMA). The trend component can be either non-linear or piece wise linear. The seasonal component is a Fourier series which requires a choice of N, N = 3 is noted as good for weekly seasonality and N = 7 for yearly. The holiday component is a set of dummy variables corresponding to holidays specified by the analyst.
+
+c\)
+
+```{r}
+library(prophet)
+library(tidyverse)
+dates <- seq(ymd('1948-01-01'), ymd('1979-01-01'), by = "months")
+birth_count <- as.integer(birth)
+df <- tibble(ds = dates,y = birth_count)
+m <- prophet(df)
+future <- make_future_dataframe(m, periods = 12, freq = 'month')
+forecast <- predict(m, future)
+```
+
+```{r,include =FALSE}
+prophet_prediction_int <- forecast[c("ds","yhat","yhat_lower","yhat_upper")] |> 
+  filter(ds >= ymd('1979-02-01'))
+
+arima_prediction <- sarima.for(birth,p = 1, d = 1, q = 1, P = 0, D = 1, Q = 1,S = 12,n.ahead = 12)
+prophet_prediction_int$yhat_arima = arima_prediction$pred
+prophet_prediction_int$yhat_lower_arima = arima_prediction$pred - 1.96*arima_prediction$se
+prophet_prediction_int$yhat_upper_arima = arima_prediction$pred + 1.96*arima_prediction$se
+
+```
+
+```{r}
+par(mfrow = c(1,2))
+prophet_prediction_int |> 
+  ggplot(aes(x = ds, y = yhat)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = yhat_lower, ymax = yhat_upper), width = 0.2) +
+  geom_line() +
+  labs(title = "Prophet Predictions", x = "Dates") +
+  ylim(200,350)
+
+prophet_prediction_int |> 
+  ggplot(aes(x = ds, y = yhat_arima)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = yhat_lower_arima, ymax = yhat_upper_arima), width = 0.2) +
+  geom_line() +
+  labs(title = "ARIMA predictions", x = "Dates") +
+  ylim(200,350)
+```
+
+We can see that the general trend is similar, but prophet has smaller prediction intervals interestingly enough. The ARIMA model predicts higher values at the starting date when compared to the prophet model.
